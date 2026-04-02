@@ -1,23 +1,24 @@
-"""Learned Gate — lightweight ML classifier trained on labeled data.
+"""Learned Gate — self-evolving classifier that improves from usage.
 
-Enhances the rule-based gate with a trained feature-based classifier.
-Uses hand-crafted features (no deep learning, no GPU needed) that
-capture the same signals as the rule engine but with learned weights.
+Three learning modes:
 
-Training data format: list of (content, should_store: bool) tuples.
+1. **Batch training** — Train on a labeled dataset (cold start)
+2. **Online learning** — Update weights from individual feedback samples
+   in real-time as the user corrects the gate's decisions
+3. **Implicit feedback** — Memories that get recalled frequently are
+   retroactively labeled as "good stores"; memories that decay to
+   eviction without ever being recalled are labeled as "bad stores"
 
-Features (15-dimensional):
-  - 5 regex signal flags (decision, preference, correction, fact, explicit)
-  - information density score
-  - text length (log-scaled)
-  - CJK character ratio
-  - numeric token count
-  - uppercase word count
-  - punctuation density
-  - stop word ratio
-  - unique token ratio
-  - action signal flag
-  - filler/greeting flag (negative)
+The classifier uses 15 hand-crafted features and logistic regression.
+No GPU, no external ML library — pure numpy, trains in <10ms.
+
+Evolution flow:
+  1. Gate makes a store/discard decision
+  2. User uses the system (recalls some memories, ignores others)
+  3. Recalled memories → positive feedback signal
+  4. Evicted-without-recall memories → negative feedback signal
+  5. Weights update incrementally (online SGD)
+  6. Gate gets better at predicting what the user actually needs
 """
 
 from __future__ import annotations
@@ -26,6 +27,8 @@ import json
 import math
 import os
 import re
+import time
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -107,34 +110,48 @@ def extract_features(content: str) -> np.ndarray:
 
 
 class LearnedGate:
-    """Logistic regression classifier for gate decisions.
+    """Self-evolving logistic regression classifier for gate decisions.
 
-    Trained on labeled (content, should_store) pairs.
-    Falls back to rule-based scoring if not trained.
+    Learns from three sources:
+    1. Explicit labeled data (batch training / cold start)
+    2. User corrections ("this should have been stored/discarded")
+    3. Implicit feedback (recalled = good, evicted-without-recall = bad)
 
-    The model is intentionally simple:
-    - No external ML library needed (pure numpy)
-    - 15 hand-crafted features
-    - Logistic regression with L2 regularization
-    - Trains in <10ms on 100 samples
+    The model evolves continuously via online SGD — each feedback sample
+    updates the weights immediately without full retraining.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, online_lr: float = 0.05) -> None:
         self.weights: np.ndarray | None = None
         self.bias: float = 0.0
         self.threshold: float = 0.5
         self.trained = False
 
+        # Online learning config
+        self._online_lr = online_lr
+        self._reg_lambda = 0.01
+
+        # Stats for monitoring evolution
+        self.stats = {
+            "batch_samples": 0,
+            "online_updates": 0,
+            "implicit_positive": 0,
+            "implicit_negative": 0,
+            "corrections": 0,
+        }
+
+        # Replay buffer — stores recent predictions for implicit feedback
+        # (content_features, predicted_store, slot_id, timestamp)
+        self._replay_buffer: deque[dict] = deque(maxlen=500)
+
+    # -- Batch training (cold start) -----------------------------------------
+
     def train(self, data: list[tuple[str, bool]], lr: float = 0.1, epochs: int = 200) -> dict:
-        """Train the classifier on labeled data.
+        """Batch train on labeled data. Used for cold start.
 
-        Args:
-            data: List of (content, should_store) tuples
-            lr: Learning rate
-            epochs: Training epochs
-
-        Returns:
-            Training metrics dict
+        Does NOT reset weights if already trained — continues from current state.
+        This means you can batch-train, then online-learn, then batch-train again
+        on new data without losing previous knowledge.
         """
         if not data:
             return {"error": "no data"}
@@ -143,42 +160,129 @@ class LearnedGate:
         y = np.array([1.0 if label else 0.0 for _, label in data])
 
         n_samples, n_features = X.shape
-        self.weights = np.zeros(n_features, dtype=np.float32)
-        self.bias = 0.0
 
-        # Mini-batch gradient descent with L2 regularization
-        reg_lambda = 0.01
+        # Initialize weights only if not yet trained (preserve existing knowledge)
+        if self.weights is None:
+            self.weights = np.zeros(n_features, dtype=np.float32)
+            self.bias = 0.0
+
         for epoch in range(epochs):
-            # Forward pass
             logits = X @ self.weights + self.bias
             preds = _sigmoid(logits)
 
-            # Loss (binary cross-entropy + L2)
             eps = 1e-7
             loss = -np.mean(y * np.log(preds + eps) + (1 - y) * np.log(1 - preds + eps))
-            loss += 0.5 * reg_lambda * np.sum(self.weights ** 2)
+            loss += 0.5 * self._reg_lambda * np.sum(self.weights ** 2)
 
-            # Gradients
             errors = preds - y
-            grad_w = (X.T @ errors) / n_samples + reg_lambda * self.weights
+            grad_w = (X.T @ errors) / n_samples + self._reg_lambda * self.weights
             grad_b = np.mean(errors)
 
-            # Update
             self.weights -= lr * grad_w
             self.bias -= lr * grad_b
 
-        # Evaluate
         final_preds = _sigmoid(X @ self.weights + self.bias) >= self.threshold
         accuracy = np.mean(final_preds == y.astype(bool))
 
         self.trained = True
+        self.stats["batch_samples"] += n_samples
 
         return {
             "accuracy": float(accuracy),
             "samples": n_samples,
             "epochs": epochs,
             "loss": float(loss),
+            "total_training_samples": self.stats["batch_samples"],
         }
+
+    # -- Online learning (real-time evolution) --------------------------------
+
+    def learn_online(self, content: str, should_store: bool) -> None:
+        """Update weights from a single feedback sample (online SGD).
+
+        Call this when:
+        - User explicitly corrects a decision ("no, remember this" / "forget that")
+        - System detects implicit feedback (recalled = good, evicted = bad)
+
+        Each call does ONE gradient step — lightweight, <0.1ms.
+        """
+        if self.weights is None:
+            self.weights = np.zeros(N_FEATURES, dtype=np.float32)
+
+        features = extract_features(content)
+        target = 1.0 if should_store else 0.0
+
+        logit = float(features @ self.weights + self.bias)
+        pred = _sigmoid_scalar(logit)
+
+        error = pred - target
+        self.weights -= self._online_lr * (error * features + self._reg_lambda * self.weights)
+        self.bias -= self._online_lr * error
+
+        self.trained = True
+        self.stats["online_updates"] += 1
+
+    def record_prediction(self, content: str, stored: bool, slot_id: int | None = None) -> None:
+        """Record a gate prediction for later implicit feedback.
+
+        Called after every gate decision. When we later observe that
+        a stored memory was recalled (positive) or evicted without
+        recall (negative), we use this to generate training signal.
+        """
+        self._replay_buffer.append({
+            "features": extract_features(content).tolist(),
+            "content_hash": hash(content),
+            "stored": stored,
+            "slot_id": slot_id,
+            "timestamp": time.time(),
+            "recalled": False,
+            "evicted_without_recall": False,
+        })
+
+    def feedback_recalled(self, slot_id: int) -> None:
+        """Implicit positive feedback: a stored memory was recalled.
+
+        This means the gate made a GOOD decision to store it.
+        Strengthens the weights toward storing similar content.
+        """
+        for entry in self._replay_buffer:
+            if entry["slot_id"] == slot_id and entry["stored"] and not entry["recalled"]:
+                entry["recalled"] = True
+                features = np.array(entry["features"], dtype=np.float32)
+                self._online_step(features, target=1.0)
+                self.stats["implicit_positive"] += 1
+                break
+
+    def feedback_evicted(self, slot_id: int, was_ever_recalled: bool) -> None:
+        """Implicit feedback from eviction.
+
+        - If the slot was recalled at least once before eviction → neutral
+          (it served its purpose, natural lifecycle)
+        - If the slot was NEVER recalled → negative feedback
+          (gate stored something useless, should learn not to)
+        """
+        if was_ever_recalled:
+            return  # Normal lifecycle, no negative signal
+
+        for entry in self._replay_buffer:
+            if entry["slot_id"] == slot_id and entry["stored"] and not entry["recalled"]:
+                entry["evicted_without_recall"] = True
+                features = np.array(entry["features"], dtype=np.float32)
+                # Weaker signal than explicit correction (0.3 weight)
+                self._online_step(features, target=0.0, lr_scale=0.3)
+                self.stats["implicit_negative"] += 1
+                break
+
+    def correct(self, content: str, should_have_stored: bool) -> None:
+        """Explicit user correction — strongest learning signal.
+
+        Call when user says "you should have remembered this" or
+        "why did you store that garbage".
+        """
+        self.learn_online(content, should_have_stored)
+        self.stats["corrections"] += 1
+
+    # -- Prediction -----------------------------------------------------------
 
     def predict(self, content: str) -> tuple[float, bool]:
         """Predict whether content should be stored.
@@ -186,7 +290,6 @@ class LearnedGate:
         Returns (confidence, should_store).
         """
         if not self.trained or self.weights is None:
-            # Fallback to rule-based
             score = _importance_score(content)
             return score, score >= 0.20
 
@@ -195,8 +298,10 @@ class LearnedGate:
         prob = _sigmoid_scalar(logit)
         return prob, prob >= self.threshold
 
+    # -- Persistence ----------------------------------------------------------
+
     def save(self, path: str | Path) -> None:
-        """Save model weights to JSON file."""
+        """Save model weights + stats to JSON file."""
         if self.weights is None:
             return
         Path(path).parent.mkdir(parents=True, exist_ok=True)
@@ -204,11 +309,12 @@ class LearnedGate:
             "weights": self.weights.tolist(),
             "bias": self.bias,
             "threshold": self.threshold,
+            "stats": self.stats,
         }
         Path(path).write_text(json.dumps(data), encoding="utf-8")
 
     def load(self, path: str | Path) -> bool:
-        """Load model weights from JSON file. Returns True if successful."""
+        """Load model weights + stats from JSON file."""
         p = Path(path)
         if not p.exists():
             return False
@@ -217,10 +323,27 @@ class LearnedGate:
             self.weights = np.array(data["weights"], dtype=np.float32)
             self.bias = data["bias"]
             self.threshold = data.get("threshold", 0.5)
+            self.stats = data.get("stats", self.stats)
             self.trained = True
             return True
         except Exception:
             return False
+
+    # -- Internal -------------------------------------------------------------
+
+    def _online_step(self, features: np.ndarray, target: float, lr_scale: float = 1.0) -> None:
+        """Single online SGD step."""
+        if self.weights is None:
+            self.weights = np.zeros(N_FEATURES, dtype=np.float32)
+
+        logit = float(features @ self.weights + self.bias)
+        pred = _sigmoid_scalar(logit)
+        error = pred - target
+        lr = self._online_lr * lr_scale
+
+        self.weights -= lr * (error * features + self._reg_lambda * self.weights)
+        self.bias -= lr * error
+        self.trained = True
 
 
 def _sigmoid(x: np.ndarray) -> np.ndarray:

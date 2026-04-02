@@ -11,6 +11,7 @@ Cold start:  L3 snapshot → restore L2 → empty L1
 from __future__ import annotations
 
 import asyncio
+import os
 import time
 
 from mamba_memory.core.embedding import EmbeddingProvider, create_provider
@@ -31,11 +32,15 @@ from mamba_memory.core.types import (
 
 
 class _EvictionHandler:
-    """Routes evicted L2 slots to L3 persistent storage."""
+    """Routes evicted L2 slots to L3 persistent storage + learned gate feedback."""
 
     def __init__(self, l3: PersistentLayer, embedder: EmbeddingProvider) -> None:
         self._l3 = l3
         self._embedder = embedder
+        self._learned_gate = None
+
+    def set_learned_gate(self, gate) -> None:
+        self._learned_gate = gate
 
     async def on_evict(self, slot) -> None:
         record = MemoryRecord(
@@ -47,6 +52,11 @@ class _EvictionHandler:
         )
         embedding = slot.embedding
         self._l3.save_memory(record, embedding=embedding)
+
+        # Implicit feedback: evicted slot → was it ever useful?
+        if self._learned_gate is not None:
+            was_recalled = slot.rehearsal_count > 0
+            self._learned_gate.feedback_evicted(slot.id, was_ever_recalled=was_recalled)
 
 
 class MambaMemoryEngine:
@@ -124,13 +134,33 @@ class MambaMemoryEngine:
             except Exception:
                 pass  # Fall back to naive compressor/merger
 
+        # Learned gate (self-evolving classifier)
+        self._learned_gate = None
+        try:
+            from mamba_memory.core.l2.learned_gate import LearnedGate
+
+            self._learned_gate = LearnedGate()
+            model_path = os.path.expanduser(
+                os.path.join(os.path.dirname(self.config.l3.db_path), "gate_model.json")
+            )
+            self._learned_gate.load(model_path)  # Load if exists, else stays untrained
+        except Exception:
+            pass
+
         # L2 with eviction handler wired to L3
         eviction = _EvictionHandler(self._l3, self._embedder)
+        if self._learned_gate:
+            eviction.set_learned_gate(self._learned_gate)
+
         self._l2 = StateLayer(
             self.config.l2,
             merger=llm_merger,
             on_evict=eviction,
         )
+
+        # Wire learned gate to the rule-based gate (hybrid mode)
+        if self._learned_gate and self._learned_gate.trained:
+            self._l2.gate.set_learned_gate(self._learned_gate)
 
         # Cold-start: restore L2 from latest snapshot
         snapshot = self._l3.load_latest_snapshot()
@@ -148,11 +178,20 @@ class MambaMemoryEngine:
         self._started = True
 
     async def shutdown(self) -> None:
-        """Save final snapshot and close resources."""
+        """Save final snapshot, learned gate model, and close resources."""
         if self._l2 and self._l3:
             snap = self._l2.snapshot(self._session_id)
             self._l3.save_snapshot(snap)
             self._l3.close()
+        # Persist learned gate model
+        if self._learned_gate and self._learned_gate.trained:
+            try:
+                model_path = os.path.expanduser(
+                    os.path.join(os.path.dirname(self.config.l3.db_path), "gate_model.json")
+                )
+                self._learned_gate.save(model_path)
+            except Exception:
+                pass
         self._started = False
 
     # -- Write path ----------------------------------------------------------
@@ -330,6 +369,9 @@ class MambaMemoryEngine:
                         layer="l2",
                         source_id=str(m.slot_id),
                     ))
+                    # Implicit positive feedback: this slot was recalled = good store
+                    if self._learned_gate is not None:
+                        self._learned_gate.feedback_recalled(m.slot_id)
 
         # L3: persistent search (semantic + entity graph)
         if "l3" in active_layers:
