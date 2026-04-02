@@ -445,19 +445,19 @@ Environment variable overrides: `MAMBA_MEMORY_DB`, `MAMBA_MEMORY_EMBEDDING`, `MA
 
 ## Benchmark Results
 
-### Gate Accuracy (55-case labeled dataset, zh/en/ja/ko)
+### Gate Accuracy — 5-Fold Cross-Validation (396 samples, 14 categories)
 
 | Metric | Rule Engine | Neural Gate v2 |
 |--------|-------------|----------------|
-| Accuracy | 94.5% | **100%** |
-| Precision | 100% | **100%** |
-| Class separation | 0.018 gap | **0.98 gap** |
-| Parameters | 16 | 608 |
-| Features | 15 (rules) | 37 (+semantic +context +profile) |
-| Personalization | No | Yes (topic affinity) |
-| Self-evolution | No | Yes (3 feedback loops) |
+| Accuracy | 88.6% ± 1.8% | **99.2% ± 1.0%** |
+| Precision | 98.3% ± 2.3% | **99.6% ± 0.8%** |
+| Recall | 81.1% ± 3.9% | **99.1% ± 1.7%** |
+| F1 | 88.8% ± 2.1% | **99.3% ± 0.9%** |
+| Confidence gap | — | **0.948** (store avg 0.976, discard avg 0.029) |
 
-The neural gate (v2) achieves perfect accuracy on the training set with extreme confidence separation: highest discard confidence (0.011) is far below lowest store confidence (0.993). The rule engine still runs as a fallback when the neural gate is not trained.
+Tested on 396 augmented samples (222 store / 174 discard) across 14 categories: decision, fact, preference, correction, explicit, action, command, greeting, ack, smalltalk, farewell, vague, question, emotion. 5-fold cross-validation ensures these numbers reflect real generalization, not memorization.
+
+The neural gate's only weakness: bare command strings without context (e.g., `terraform plan -var-file=prod.tfvars`). All other categories achieve 100% per-fold accuracy.
 
 ### Decay Parameter Sweep
 
