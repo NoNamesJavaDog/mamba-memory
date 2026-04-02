@@ -1,34 +1,32 @@
-"""Learned Gate — self-evolving classifier that improves from usage.
+"""Learned Gate v2 — self-evolving neural classifier with semantic + context awareness.
+
+Architecture:
+  Input features (37-dim) → Hidden layer (16 neurons, ReLU) → Output (sigmoid)
+
+Four types of features:
+  1. Rule signals     (15-dim) — same regex features as v1
+  2. Semantic embed   (8-dim)  — compressed embedding captures meaning
+  3. Context window   (8-dim)  — what's being discussed right now
+  4. User profile     (6-dim)  — what topics this user cares about
 
 Three learning modes:
+  1. Batch training       — cold start on labeled data
+  2. Online learning      — real-time single-sample SGD from corrections
+  3. Implicit feedback    — recalled=positive, evicted-without-recall=negative
 
-1. **Batch training** — Train on a labeled dataset (cold start)
-2. **Online learning** — Update weights from individual feedback samples
-   in real-time as the user corrects the gate's decisions
-3. **Implicit feedback** — Memories that get recalled frequently are
-   retroactively labeled as "good stores"; memories that decay to
-   eviction without ever being recalled are labeled as "bad stores"
-
-The classifier uses 15 hand-crafted features and logistic regression.
-No GPU, no external ML library — pure numpy, trains in <10ms.
-
-Evolution flow:
-  1. Gate makes a store/discard decision
-  2. User uses the system (recalls some memories, ignores others)
-  3. Recalled memories → positive feedback signal
-  4. Evicted-without-recall memories → negative feedback signal
-  5. Weights update incrementally (online SGD)
-  6. Gate gets better at predicting what the user actually needs
+Why two-layer NN instead of logistic regression:
+  - Can learn feature interactions (e.g., "short + has number" is a config value)
+  - ReLU activation captures non-linear decision boundaries
+  - Still tiny: 37×16 + 16×1 = 608 parameters, trains in <1ms per sample
 """
 
 from __future__ import annotations
 
 import json
 import math
-import os
 import re
 import time
-from collections import deque
+from collections import Counter, deque
 from pathlib import Path
 
 import numpy as np
@@ -45,93 +43,309 @@ from mamba_memory.core.l2.gate import (
 )
 from mamba_memory.core.text import _STOP_WORDS, _is_cjk, information_density, tokenize
 
-# Feature dimension
-N_FEATURES = 15
+# ---------------------------------------------------------------------------
+# Feature extraction (37 dimensions total)
+# ---------------------------------------------------------------------------
+
+N_RULE_FEATURES = 15
+N_SEMANTIC_FEATURES = 8
+N_CONTEXT_FEATURES = 8
+N_PROFILE_FEATURES = 6
+N_FEATURES = N_RULE_FEATURES + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES + N_PROFILE_FEATURES
+# = 37
 
 
-def extract_features(content: str) -> np.ndarray:
-    """Extract a fixed-size feature vector from text content."""
-    features = np.zeros(N_FEATURES, dtype=np.float32)
-
+def extract_rule_features(content: str) -> np.ndarray:
+    """Original 15 rule-based features."""
+    features = np.zeros(N_RULE_FEATURES, dtype=np.float32)
     if not content.strip():
         return features
 
-    # 0-4: Regex signal flags
     features[0] = 1.0 if _DECISION_PATTERNS.search(content) else 0.0
     features[1] = 1.0 if _PREFERENCE_PATTERNS.search(content) else 0.0
     features[2] = 1.0 if _CORRECTION_PATTERNS.search(content) else 0.0
     features[3] = 1.0 if _FACT_PATTERNS.search(content) else 0.0
     features[4] = 1.0 if _EXPLICIT_MEMORY_PATTERNS.search(content) else 0.0
-
-    # 5: Information density
     features[5] = information_density(content)
-
-    # 6: Log-scaled text length
     features[6] = math.log1p(len(content)) / 10.0
-
-    # 7: CJK character ratio
     cjk_count = sum(1 for c in content if _is_cjk(c))
     features[7] = cjk_count / max(len(content), 1)
-
-    # 8: Numeric token count (normalized)
-    num_count = len(re.findall(r"\d+", content))
-    features[8] = min(num_count / 5.0, 1.0)
-
-    # 9: Uppercase word count (normalized)
-    upper_count = len(re.findall(r"[A-Z][a-zA-Z]+", content))
-    features[9] = min(upper_count / 5.0, 1.0)
-
-    # 10: Punctuation density
+    features[8] = min(len(re.findall(r"\d+", content)) / 5.0, 1.0)
+    features[9] = min(len(re.findall(r"[A-Z][a-zA-Z]+", content)) / 5.0, 1.0)
     punct_count = sum(1 for c in content if not c.isalnum() and not c.isspace())
     features[10] = punct_count / max(len(content), 1)
-
-    # 11: Stop word ratio
     words = re.findall(r"\w+", content.lower())
     if words:
         stop_count = sum(1 for w in words if w in _STOP_WORDS)
         features[11] = stop_count / len(words)
-    else:
-        features[11] = 0.0
-
-    # 12: Unique token ratio (lexical diversity)
     tokens = tokenize(content)
     if tokens:
         features[12] = len(set(tokens)) / len(tokens)
-    else:
-        features[12] = 0.0
-
-    # 13: Action signal
     features[13] = 1.0 if _ACTION_PATTERNS.search(content) else 0.0
-
-    # 14: Filler/greeting (negative signal)
     features[14] = 1.0 if _FILLER_PATTERNS.match(content.strip()) else 0.0
 
     return features
 
 
-class LearnedGate:
-    """Self-evolving logistic regression classifier for gate decisions.
+def compress_embedding(embedding: list[float] | None, target_dim: int = 8) -> np.ndarray:
+    """Compress a high-dim embedding to fixed size via chunked averaging.
 
-    Learns from three sources:
-    1. Explicit labeled data (batch training / cold start)
-    2. User corrections ("this should have been stored/discarded")
-    3. Implicit feedback (recalled = good, evicted-without-recall = bad)
+    768-dim embedding → split into 8 chunks of 96 → mean each → 8-dim vector.
+    Captures the semantic "shape" without storing the full vector.
+    """
+    result = np.zeros(target_dim, dtype=np.float32)
+    if embedding is None or len(embedding) == 0:
+        return result
 
-    The model evolves continuously via online SGD — each feedback sample
-    updates the weights immediately without full retraining.
+    arr = np.array(embedding, dtype=np.float32)
+    chunk_size = max(1, len(arr) // target_dim)
+    for i in range(target_dim):
+        start = i * chunk_size
+        end = min(start + chunk_size, len(arr))
+        if start < len(arr):
+            result[i] = float(np.mean(arr[start:end]))
+
+    # Normalize to [-1, 1]
+    norm = np.linalg.norm(result)
+    if norm > 0:
+        result /= norm
+
+    return result
+
+
+def extract_context_features(recent_topics: list[str], content: str) -> np.ndarray:
+    """Features derived from recent conversation context.
+
+    Captures: is this content related to what we've been discussing?
+    If yes → more likely worth storing (continuation of important topic).
+    If no → might be a topic shift (could be important or not).
+    """
+    features = np.zeros(N_CONTEXT_FEATURES, dtype=np.float32)
+    if not recent_topics:
+        return features
+
+    content_tokens = set(tokenize(content.lower()))
+    if not content_tokens:
+        return features
+
+    # 0: Overlap with last topic
+    if recent_topics:
+        last_tokens = set(tokenize(recent_topics[-1].lower()))
+        if last_tokens and content_tokens:
+            features[0] = len(content_tokens & last_tokens) / max(len(content_tokens), 1)
+
+    # 1: Average overlap with last 3 topics
+    overlaps = []
+    for topic in recent_topics[-3:]:
+        topic_tokens = set(tokenize(topic.lower()))
+        if topic_tokens and content_tokens:
+            overlaps.append(len(content_tokens & topic_tokens) / max(len(content_tokens), 1))
+    features[1] = sum(overlaps) / max(len(overlaps), 1)
+
+    # 2: Is this a topic shift? (low overlap with all recent)
+    features[2] = 1.0 if features[1] < 0.1 else 0.0
+
+    # 3: Topic depth (how many recent messages on same topic)
+    same_topic_count = sum(1 for o in overlaps if o > 0.3)
+    features[3] = min(same_topic_count / 3.0, 1.0)
+
+    # 4: Conversation length signal
+    features[4] = min(len(recent_topics) / 20.0, 1.0)
+
+    # 5-7: Token frequency in recent context (are we seeing repeated entities?)
+    all_recent_tokens: list[str] = []
+    for t in recent_topics[-5:]:
+        all_recent_tokens.extend(tokenize(t.lower()))
+    freq = Counter(all_recent_tokens)
+    repeated = [t for t in content_tokens if freq.get(t, 0) >= 2]
+    features[5] = len(repeated) / max(len(content_tokens), 1)
+    features[6] = min(len(freq) / 50.0, 1.0)  # vocabulary diversity
+    features[7] = 1.0 if any(freq.get(t, 0) >= 3 for t in content_tokens) else 0.0
+
+    return features
+
+
+class UserProfile:
+    """Tracks what topics this user cares about.
+
+    Built incrementally from recalled topics — if a user keeps asking
+    about "database" and "Redis", those topics get higher affinity scores.
     """
 
-    def __init__(self, online_lr: float = 0.05) -> None:
-        self.weights: np.ndarray | None = None
-        self.bias: float = 0.0
+    def __init__(self) -> None:
+        self.topic_affinity: Counter = Counter()
+        self.total_recalls: int = 0
+
+    def record_recall(self, content: str) -> None:
+        """Record that the user recalled content about these tokens."""
+        tokens = tokenize(content.lower())
+        for t in set(tokens):
+            self.topic_affinity[t] += 1
+        self.total_recalls += 1
+
+    def extract_features(self, content: str) -> np.ndarray:
+        """How much does this content match the user's interests?"""
+        features = np.zeros(N_PROFILE_FEATURES, dtype=np.float32)
+
+        content_tokens = set(tokenize(content.lower()))
+        if not content_tokens or self.total_recalls == 0:
+            return features
+
+        # 0: Max affinity of any token in content
+        affinities = [self.topic_affinity.get(t, 0) for t in content_tokens]
+        if affinities:
+            features[0] = min(max(affinities) / 10.0, 1.0)
+
+        # 1: Average affinity
+        features[1] = min(sum(affinities) / max(len(affinities), 1) / 5.0, 1.0)
+
+        # 2: Fraction of content tokens that are "known interests"
+        known = sum(1 for t in content_tokens if self.topic_affinity.get(t, 0) >= 2)
+        features[2] = known / max(len(content_tokens), 1)
+
+        # 3: Is this in the user's top-10 topics?
+        top_10 = set(t for t, _ in self.topic_affinity.most_common(10))
+        features[3] = len(content_tokens & top_10) / max(len(content_tokens), 1)
+
+        # 4: User engagement level (total recalls normalized)
+        features[4] = min(self.total_recalls / 100.0, 1.0)
+
+        # 5: Topic concentration (does user focus on few topics or many?)
+        if len(self.topic_affinity) > 0:
+            top_5_sum = sum(c for _, c in self.topic_affinity.most_common(5))
+            total_sum = sum(self.topic_affinity.values())
+            features[5] = top_5_sum / max(total_sum, 1)
+
+        return features
+
+    def to_dict(self) -> dict:
+        return {
+            "topic_affinity": dict(self.topic_affinity.most_common(100)),
+            "total_recalls": self.total_recalls,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> UserProfile:
+        profile = cls()
+        profile.topic_affinity = Counter(data.get("topic_affinity", {}))
+        profile.total_recalls = data.get("total_recalls", 0)
+        return profile
+
+
+# ---------------------------------------------------------------------------
+# Two-layer neural network
+# ---------------------------------------------------------------------------
+
+class TwoLayerNet:
+    """Minimal 2-layer neural network: Input → Hidden(ReLU) → Output(sigmoid).
+
+    37 input → 16 hidden → 1 output = 608 parameters.
+    Pure numpy, no framework needed.
+    """
+
+    def __init__(self, input_dim: int = N_FEATURES, hidden_dim: int = 16) -> None:
+        self.input_dim = input_dim
+        self.hidden_dim = hidden_dim
+
+        # Xavier initialization
+        scale1 = math.sqrt(2.0 / input_dim)
+        scale2 = math.sqrt(2.0 / hidden_dim)
+        self.W1 = np.random.randn(input_dim, hidden_dim).astype(np.float32) * scale1
+        self.b1 = np.zeros(hidden_dim, dtype=np.float32)
+        self.W2 = np.random.randn(hidden_dim).astype(np.float32) * scale2
+        self.b2 = np.float32(0.0)
+
+    def forward(self, x: np.ndarray) -> tuple[float, np.ndarray]:
+        """Forward pass. Returns (output_prob, hidden_activations)."""
+        # Hidden layer: ReLU
+        h = x @ self.W1 + self.b1
+        h_relu = np.maximum(h, 0)  # ReLU
+
+        # Output: sigmoid
+        logit = float(h_relu @ self.W2 + self.b2)
+        prob = _sigmoid_scalar(logit)
+
+        return prob, h_relu
+
+    def backward_step(self, x: np.ndarray, target: float, lr: float = 0.01) -> float:
+        """One step of backpropagation. Returns loss."""
+        # Forward
+        h = x @ self.W1 + self.b1
+        h_relu = np.maximum(h, 0)
+        logit = float(h_relu @ self.W2 + self.b2)
+        prob = _sigmoid_scalar(logit)
+
+        # Loss
+        eps = 1e-7
+        loss = -(target * math.log(prob + eps) + (1 - target) * math.log(1 - prob + eps))
+
+        # Output gradient
+        d_logit = prob - target  # scalar
+
+        # Gradient for W2, b2
+        d_W2 = h_relu * d_logit
+        d_b2 = d_logit
+
+        # Backprop through ReLU
+        d_h = self.W2 * d_logit  # (hidden_dim,)
+        d_h[h <= 0] = 0  # ReLU mask
+
+        # Gradient for W1, b1
+        d_W1 = np.outer(x, d_h)
+        d_b1 = d_h
+
+        # Update with L2 regularization
+        reg = 0.001
+        self.W2 -= lr * (d_W2 + reg * self.W2)
+        self.b2 -= lr * d_b2
+        self.W1 -= lr * (d_W1 + reg * self.W1)
+        self.b1 -= lr * (d_b1 + reg * self.b1)
+
+        return loss
+
+    def to_dict(self) -> dict:
+        return {
+            "W1": self.W1.tolist(),
+            "b1": self.b1.tolist(),
+            "W2": self.W2.tolist(),
+            "b2": float(self.b2),
+            "input_dim": self.input_dim,
+            "hidden_dim": self.hidden_dim,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> TwoLayerNet:
+        net = cls(data["input_dim"], data["hidden_dim"])
+        net.W1 = np.array(data["W1"], dtype=np.float32)
+        net.b1 = np.array(data["b1"], dtype=np.float32)
+        net.W2 = np.array(data["W2"], dtype=np.float32)
+        net.b2 = np.float32(data["b2"])
+        return net
+
+
+# ---------------------------------------------------------------------------
+# LearnedGate v2 — main class
+# ---------------------------------------------------------------------------
+
+class LearnedGate:
+    """Self-evolving neural gate with semantic + context + user profile awareness.
+
+    Upgrades from v1:
+    - 37 features (was 15): +semantic embedding +context window +user profile
+    - 2-layer neural network (was logistic regression): captures non-linear patterns
+    - User profile: tracks what topics the user actually cares about
+    - Context awareness: evaluates content in relation to recent conversation
+    """
+
+    def __init__(self, online_lr: float = 0.02) -> None:
+        self._net: TwoLayerNet | None = None
         self.threshold: float = 0.5
         self.trained = False
 
-        # Online learning config
         self._online_lr = online_lr
-        self._reg_lambda = 0.01
+        self._profile = UserProfile()
+        self._recent_topics: deque[str] = deque(maxlen=20)
 
-        # Stats for monitoring evolution
         self.stats = {
             "batch_samples": 0,
             "online_updates": 0,
@@ -140,214 +354,203 @@ class LearnedGate:
             "corrections": 0,
         }
 
-        # Replay buffer — stores recent predictions for implicit feedback
-        # (content_features, predicted_store, slot_id, timestamp)
         self._replay_buffer: deque[dict] = deque(maxlen=500)
 
-    # -- Batch training (cold start) -----------------------------------------
+    # -- Feature extraction (full 37-dim) ------------------------------------
 
-    def train(self, data: list[tuple[str, bool]], lr: float = 0.1, epochs: int = 200) -> dict:
-        """Batch train on labeled data. Used for cold start.
+    def _extract_full_features(
+        self,
+        content: str,
+        embedding: list[float] | None = None,
+    ) -> np.ndarray:
+        """Extract complete 37-dim feature vector."""
+        rule = extract_rule_features(content)
+        semantic = compress_embedding(embedding)
+        context = extract_context_features(list(self._recent_topics), content)
+        profile = self._profile.extract_features(content)
 
-        Does NOT reset weights if already trained — continues from current state.
-        This means you can batch-train, then online-learn, then batch-train again
-        on new data without losing previous knowledge.
+        return np.concatenate([rule, semantic, context, profile])
+
+    # -- Batch training ------------------------------------------------------
+
+    def train(
+        self,
+        data: list[tuple[str, bool]],
+        lr: float = 0.05,
+        epochs: int = 300,
+        embeddings: list[list[float] | None] | None = None,
+    ) -> dict:
+        """Batch train on labeled data.
+
+        Args:
+            data: List of (content, should_store) tuples
+            embeddings: Optional embeddings for each content (same length as data)
         """
         if not data:
             return {"error": "no data"}
 
-        X = np.array([extract_features(content) for content, _ in data])
+        embs = embeddings or [None] * len(data)
+
+        X = np.array([
+            self._extract_full_features(content, emb)
+            for (content, _), emb in zip(data, embs)
+        ])
         y = np.array([1.0 if label else 0.0 for _, label in data])
 
-        n_samples, n_features = X.shape
+        # Initialize network if needed (preserve existing on re-train)
+        if self._net is None:
+            self._net = TwoLayerNet(input_dim=X.shape[1])
 
-        # Initialize weights only if not yet trained (preserve existing knowledge)
-        if self.weights is None:
-            self.weights = np.zeros(n_features, dtype=np.float32)
-            self.bias = 0.0
-
+        total_loss = 0.0
         for epoch in range(epochs):
-            logits = X @ self.weights + self.bias
-            preds = _sigmoid(logits)
+            # Shuffle
+            idx = np.random.permutation(len(data))
+            epoch_loss = 0.0
+            for i in idx:
+                loss = self._net.backward_step(X[i], y[i], lr=lr)
+                epoch_loss += loss
+            total_loss = epoch_loss / len(data)
 
-            eps = 1e-7
-            loss = -np.mean(y * np.log(preds + eps) + (1 - y) * np.log(1 - preds + eps))
-            loss += 0.5 * self._reg_lambda * np.sum(self.weights ** 2)
-
-            errors = preds - y
-            grad_w = (X.T @ errors) / n_samples + self._reg_lambda * self.weights
-            grad_b = np.mean(errors)
-
-            self.weights -= lr * grad_w
-            self.bias -= lr * grad_b
-
-        final_preds = _sigmoid(X @ self.weights + self.bias) >= self.threshold
-        accuracy = np.mean(final_preds == y.astype(bool))
+        # Evaluate
+        correct = 0
+        for i in range(len(data)):
+            prob, _ = self._net.forward(X[i])
+            if (prob >= self.threshold) == y[i].astype(bool):
+                correct += 1
+        accuracy = correct / len(data)
 
         self.trained = True
-        self.stats["batch_samples"] += n_samples
+        self.stats["batch_samples"] += len(data)
 
         return {
-            "accuracy": float(accuracy),
-            "samples": n_samples,
+            "accuracy": accuracy,
+            "samples": len(data),
             "epochs": epochs,
-            "loss": float(loss),
-            "total_training_samples": self.stats["batch_samples"],
+            "loss": float(total_loss),
         }
 
-    # -- Online learning (real-time evolution) --------------------------------
+    # -- Online learning -----------------------------------------------------
 
-    def learn_online(self, content: str, should_store: bool) -> None:
-        """Update weights from a single feedback sample (online SGD).
+    def learn_online(self, content: str, should_store: bool, embedding: list[float] | None = None) -> None:
+        """Single-sample online update."""
+        if self._net is None:
+            self._net = TwoLayerNet()
 
-        Call this when:
-        - User explicitly corrects a decision ("no, remember this" / "forget that")
-        - System detects implicit feedback (recalled = good, evicted = bad)
-
-        Each call does ONE gradient step — lightweight, <0.1ms.
-        """
-        if self.weights is None:
-            self.weights = np.zeros(N_FEATURES, dtype=np.float32)
-
-        features = extract_features(content)
+        features = self._extract_full_features(content, embedding)
         target = 1.0 if should_store else 0.0
 
-        logit = float(features @ self.weights + self.bias)
-        pred = _sigmoid_scalar(logit)
-
-        error = pred - target
-        self.weights -= self._online_lr * (error * features + self._reg_lambda * self.weights)
-        self.bias -= self._online_lr * error
-
+        self._net.backward_step(features, target, lr=self._online_lr)
         self.trained = True
         self.stats["online_updates"] += 1
 
-    def record_prediction(self, content: str, stored: bool, slot_id: int | None = None) -> None:
-        """Record a gate prediction for later implicit feedback.
-
-        Called after every gate decision. When we later observe that
-        a stored memory was recalled (positive) or evicted without
-        recall (negative), we use this to generate training signal.
-        """
+    def record_prediction(self, content: str, stored: bool, slot_id: int | None = None,
+                          embedding: list[float] | None = None) -> None:
+        """Record a prediction for later implicit feedback."""
         self._replay_buffer.append({
-            "features": extract_features(content).tolist(),
-            "content_hash": hash(content),
+            "features": self._extract_full_features(content, embedding).tolist(),
+            "content_preview": content[:100],
             "stored": stored,
             "slot_id": slot_id,
             "timestamp": time.time(),
             "recalled": False,
-            "evicted_without_recall": False,
         })
+        # Track as recent topic for context awareness
+        if len(content) > 5:
+            self._recent_topics.append(content)
 
     def feedback_recalled(self, slot_id: int) -> None:
-        """Implicit positive feedback: a stored memory was recalled.
-
-        This means the gate made a GOOD decision to store it.
-        Strengthens the weights toward storing similar content.
-        """
+        """Implicit positive: stored memory was recalled = good decision."""
         for entry in self._replay_buffer:
             if entry["slot_id"] == slot_id and entry["stored"] and not entry["recalled"]:
                 entry["recalled"] = True
                 features = np.array(entry["features"], dtype=np.float32)
-                self._online_step(features, target=1.0)
+                if self._net is None:
+                    self._net = TwoLayerNet()
+                self._net.backward_step(features, 1.0, lr=self._online_lr)
                 self.stats["implicit_positive"] += 1
+
+                # Update user profile
+                self._profile.record_recall(entry["content_preview"])
                 break
 
     def feedback_evicted(self, slot_id: int, was_ever_recalled: bool) -> None:
-        """Implicit feedback from eviction.
-
-        - If the slot was recalled at least once before eviction → neutral
-          (it served its purpose, natural lifecycle)
-        - If the slot was NEVER recalled → negative feedback
-          (gate stored something useless, should learn not to)
-        """
+        """Implicit feedback from eviction."""
         if was_ever_recalled:
-            return  # Normal lifecycle, no negative signal
+            return
 
         for entry in self._replay_buffer:
             if entry["slot_id"] == slot_id and entry["stored"] and not entry["recalled"]:
-                entry["evicted_without_recall"] = True
                 features = np.array(entry["features"], dtype=np.float32)
-                # Weaker signal than explicit correction (0.3 weight)
-                self._online_step(features, target=0.0, lr_scale=0.3)
+                if self._net is None:
+                    self._net = TwoLayerNet()
+                # Weaker learning signal for indirect evidence
+                self._net.backward_step(features, 0.0, lr=self._online_lr * 0.3)
                 self.stats["implicit_negative"] += 1
                 break
 
-    def correct(self, content: str, should_have_stored: bool) -> None:
-        """Explicit user correction — strongest learning signal.
-
-        Call when user says "you should have remembered this" or
-        "why did you store that garbage".
-        """
-        self.learn_online(content, should_have_stored)
+    def correct(self, content: str, should_have_stored: bool, embedding: list[float] | None = None) -> None:
+        """Explicit user correction — strongest signal."""
+        self.learn_online(content, should_have_stored, embedding)
         self.stats["corrections"] += 1
 
     # -- Prediction -----------------------------------------------------------
 
-    def predict(self, content: str) -> tuple[float, bool]:
-        """Predict whether content should be stored.
-
-        Returns (confidence, should_store).
-        """
-        if not self.trained or self.weights is None:
+    def predict(self, content: str, embedding: list[float] | None = None) -> tuple[float, bool]:
+        """Predict whether content should be stored."""
+        if not self.trained or self._net is None:
             score = _importance_score(content)
             return score, score >= 0.20
 
-        features = extract_features(content)
-        logit = float(features @ self.weights + self.bias)
-        prob = _sigmoid_scalar(logit)
+        features = self._extract_full_features(content, embedding)
+        prob, _ = self._net.forward(features)
         return prob, prob >= self.threshold
 
     # -- Persistence ----------------------------------------------------------
 
     def save(self, path: str | Path) -> None:
-        """Save model weights + stats to JSON file."""
-        if self.weights is None:
+        """Save model + profile + stats."""
+        if self._net is None:
             return
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         data = {
-            "weights": self.weights.tolist(),
-            "bias": self.bias,
+            "version": 2,
+            "net": self._net.to_dict(),
             "threshold": self.threshold,
             "stats": self.stats,
+            "profile": self._profile.to_dict(),
+            "recent_topics": list(self._recent_topics),
         }
         Path(path).write_text(json.dumps(data), encoding="utf-8")
 
     def load(self, path: str | Path) -> bool:
-        """Load model weights + stats from JSON file."""
+        """Load model + profile + stats."""
         p = Path(path)
         if not p.exists():
             return False
         try:
             data = json.loads(p.read_text(encoding="utf-8"))
-            self.weights = np.array(data["weights"], dtype=np.float32)
-            self.bias = data["bias"]
+
+            if data.get("version", 1) >= 2:
+                self._net = TwoLayerNet.from_dict(data["net"])
+            else:
+                # v1 format: logistic regression weights → can't directly convert
+                # Start fresh with neural net
+                return False
+
             self.threshold = data.get("threshold", 0.5)
             self.stats = data.get("stats", self.stats)
+            self._profile = UserProfile.from_dict(data.get("profile", {}))
+            self._recent_topics = deque(data.get("recent_topics", []), maxlen=20)
             self.trained = True
             return True
         except Exception:
             return False
 
-    # -- Internal -------------------------------------------------------------
 
-    def _online_step(self, features: np.ndarray, target: float, lr_scale: float = 1.0) -> None:
-        """Single online SGD step."""
-        if self.weights is None:
-            self.weights = np.zeros(N_FEATURES, dtype=np.float32)
-
-        logit = float(features @ self.weights + self.bias)
-        pred = _sigmoid_scalar(logit)
-        error = pred - target
-        lr = self._online_lr * lr_scale
-
-        self.weights -= lr * (error * features + self._reg_lambda * self.weights)
-        self.bias -= lr * error
-        self.trained = True
-
-
-def _sigmoid(x: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-np.clip(x, -500, 500)))
+# Backward compatibility: keep extract_features as a public function
+def extract_features(content: str) -> np.ndarray:
+    """Extract 15-dim rule features (backward compatible with v1 callers)."""
+    return extract_rule_features(content)
 
 
 def _sigmoid_scalar(x: float) -> float:
