@@ -17,7 +17,7 @@ Three learning modes:
 Why two-layer NN instead of logistic regression:
   - Can learn feature interactions (e.g., "short + has number" is a config value)
   - ReLU activation captures non-linear decision boundaries
-  - Still tiny: 37×16 + 16×1 = 608 parameters, trains in <1ms per sample
+  - Still tiny: 62×16 + 16×1 = 1008 parameters, trains in <1ms per sample
 """
 
 from __future__ import annotations
@@ -48,11 +48,14 @@ from mamba_memory.core.text import _STOP_WORDS, _is_cjk, information_density, to
 # ---------------------------------------------------------------------------
 
 N_RULE_FEATURES = 15
-N_SEMANTIC_FEATURES = 8
+N_COMMAND_FEATURES = 5   # NEW: command/code detection
+N_CODE_FEATURES = 4      # NEW: path/config/code patterns
+N_SEMANTIC_FEATURES = 24  # UPGRADED: 8 → 24 (preserves more embedding info)
 N_CONTEXT_FEATURES = 8
 N_PROFILE_FEATURES = 6
-N_FEATURES = N_RULE_FEATURES + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES + N_PROFILE_FEATURES
-# = 37
+N_FEATURES = (N_RULE_FEATURES + N_COMMAND_FEATURES + N_CODE_FEATURES
+              + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES + N_PROFILE_FEATURES)
+# = 15 + 5 + 4 + 24 + 8 + 6 = 62
 
 
 def extract_rule_features(content: str) -> np.ndarray:
@@ -87,7 +90,86 @@ def extract_rule_features(content: str) -> np.ndarray:
     return features
 
 
-def compress_embedding(embedding: list[float] | None, target_dim: int = 8) -> np.ndarray:
+# -- Command detection patterns (catches "terraform plan", "psql -h", etc.)
+_COMMAND_BINS = [
+    # Binary names at start of string
+    re.compile(r"^(sudo\s+)?(docker|kubectl|helm|terraform|ansible|vagrant|"
+               r"npm|npx|yarn|pnpm|bun|pip|poetry|uv|"
+               r"git|ssh|scp|rsync|curl|wget|"
+               r"psql|mysql|redis-cli|mongo|"
+               r"systemctl|journalctl|nginx|certbot|"
+               r"python|node|java|go|cargo|make|cmake)\s", re.I),
+    # Flags pattern: word followed by -- or - flags
+    re.compile(r"\s-{1,2}[a-zA-Z][\w-]*", re.I),
+    # Pipe/redirect
+    re.compile(r"[|><]"),
+    # File args with extensions
+    re.compile(r"\S+\.(ya?ml|json|toml|conf|sh|py|ts|js|sql|tf|tfvars)\b", re.I),
+    # Environment variable assignment
+    re.compile(r"[A-Z_]{2,}=\S+"),
+]
+
+_PATH_PATTERNS = [
+    re.compile(r"[~/.][\w./\\-]{3,}"),              # File paths
+    re.compile(r"\b\w+://[^\s]+"),                    # Any URI
+    re.compile(r"[a-zA-Z0-9._-]+\.(ya?ml|json|toml|conf|env|ini|cfg|sql|tf)\b", re.I),  # Config files
+    re.compile(r"(?:SELECT|INSERT|UPDATE|DELETE|CREATE|ALTER|DROP)\s", re.I),  # SQL
+]
+
+
+def extract_command_features(content: str) -> np.ndarray:
+    """Detect if content is a command/script (5 features).
+
+    Catches things like:
+      'terraform plan -var-file=prod.tfvars'
+      'psql -h prod-db -U admin -d myapp'
+      'docker compose up -d --build'
+    """
+    features = np.zeros(N_COMMAND_FEATURES, dtype=np.float32)
+    if not content.strip():
+        return features
+
+    # 0: Starts with known command binary
+    features[0] = 1.0 if _COMMAND_BINS[0].search(content) else 0.0
+
+    # 1: Has CLI flags (-x, --flag)
+    flag_count = len(_COMMAND_BINS[1].findall(content))
+    features[1] = min(flag_count / 3.0, 1.0)
+
+    # 2: Has pipes/redirects
+    features[2] = 1.0 if _COMMAND_BINS[2].search(content) else 0.0
+
+    # 3: Has file args with extensions
+    features[3] = 1.0 if _COMMAND_BINS[3].search(content) else 0.0
+
+    # 4: Has env var assignment
+    features[4] = 1.0 if _COMMAND_BINS[4].search(content) else 0.0
+
+    return features
+
+
+def extract_code_features(content: str) -> np.ndarray:
+    """Detect paths, configs, code patterns (4 features)."""
+    features = np.zeros(N_CODE_FEATURES, dtype=np.float32)
+    if not content.strip():
+        return features
+
+    # 0: Contains file paths
+    features[0] = 1.0 if _PATH_PATTERNS[0].search(content) else 0.0
+
+    # 1: Contains URIs (any scheme)
+    features[1] = 1.0 if _PATH_PATTERNS[1].search(content) else 0.0
+
+    # 2: Contains config file references
+    features[2] = 1.0 if _PATH_PATTERNS[2].search(content) else 0.0
+
+    # 3: Contains SQL keywords
+    features[3] = 1.0 if _PATH_PATTERNS[3].search(content) else 0.0
+
+    return features
+
+
+def compress_embedding(embedding: list[float] | None, target_dim: int = 24) -> np.ndarray:
     """Compress a high-dim embedding to fixed size via chunked averaging.
 
     768-dim embedding → split into 8 chunks of 96 → mean each → 8-dim vector.
@@ -363,13 +445,15 @@ class LearnedGate:
         content: str,
         embedding: list[float] | None = None,
     ) -> np.ndarray:
-        """Extract complete 37-dim feature vector."""
-        rule = extract_rule_features(content)
-        semantic = compress_embedding(embedding)
-        context = extract_context_features(list(self._recent_topics), content)
-        profile = self._profile.extract_features(content)
+        """Extract complete 62-dim feature vector."""
+        rule = extract_rule_features(content)        # 15
+        command = extract_command_features(content)   # 5
+        code = extract_code_features(content)         # 4
+        semantic = compress_embedding(embedding)      # 24
+        context = extract_context_features(list(self._recent_topics), content)  # 8
+        profile = self._profile.extract_features(content)  # 6
 
-        return np.concatenate([rule, semantic, context, profile])
+        return np.concatenate([rule, command, code, semantic, context, profile])
 
     # -- Batch training ------------------------------------------------------
 
