@@ -118,6 +118,95 @@ memory_ingest({
 | Selection mechanism Delta(x) | Hybrid gate: 5-dim rules + logistic regression |
 | Discretization | Each conversation turn = one discrete time step |
 
+### How Memory Decisions Work
+
+Every piece of input goes through a **three-stage decision pipeline** that determines whether it becomes long-term memory, short-term context, or gets discarded entirely.
+
+#### Stage 1: Noise Pre-Filter (instant, <0.1ms)
+
+Pure filler is killed immediately — zero computation wasted:
+
+```
+"你好"        → score 0, DISCARD     "ok"          → score 0, DISCARD
+"嗯嗯"        → score 0, DISCARD     "こんにちは"    → score 0, DISCARD
+"好的收到"     → score 0, DISCARD     "see you"     → score 0, DISCARD
+```
+
+Pattern: greetings, acknowledgments, farewells, emoji reactions, single-word responses in any supported language (zh/en/ja/ko). These never enter any memory layer.
+
+#### Stage 2: Importance Scoring (rule engine + learned classifier)
+
+Content that passes the pre-filter gets scored across **5 dimensions**:
+
+```
+"我决定把数据库迁移到PostgreSQL 16"
+  ├── Intent:     0.67  (decision signal: "决定")
+  ├── Structured: 0.50  (version number: "16")
+  ├── Explicit:   0.00
+  ├── Action:     0.00
+  ├── Density:    0.54  (high lexical diversity)
+  └── Total:      0.35  → STORE ✓ (threshold: 0.25)
+
+"今天天气真好"
+  ├── Intent:     0.00
+  ├── Structured: 0.00
+  ├── Explicit:   0.00
+  ├── Action:     0.00
+  ├── Density:    0.12  (low: mostly stop words)
+  └── Total:      0.02  → DISCARD ✗
+
+"记住：API密钥每90天轮换"
+  ├── Intent:     0.00
+  ├── Structured: 0.33  (number: "90天")
+  ├── Explicit:   1.00  (signal: "记住")
+  ├── Action:     0.00
+  ├── Density:    0.40
+  └── Total:      0.33  → STORE ✓
+```
+
+**What gets stored** (high-value signals):
+
+| Signal | Examples | Why it matters |
+|--------|----------|----------------|
+| Decisions | "我决定用Docker", "switch to PostgreSQL" | Changes system state |
+| Preferences | "我喜欢用VS Code", "prefer tabs" | Personalizes behavior |
+| Corrections | "不对，端口是8443", "actually it's..." | Fixes wrong knowledge |
+| Facts with data | "IP: 192.168.1.1, port 5432" | Concrete retrievable info |
+| Explicit requests | "记住这个", "don't forget" | User intent to persist |
+| Schedules | "每天凌晨3点备份", "daily at 3am" | Recurring operations |
+| Configs | "maxmemory 256MB", "rate limit 100/min" | System parameters |
+| Action items | "下一步部署到生产", "TODO: add tests" | Future tasks |
+
+**What gets discarded** (low-value signals):
+
+| Signal | Examples | Why it's filtered |
+|--------|----------|-------------------|
+| Greetings | "你好", "hello", "早上好" | Zero information content |
+| Acknowledgments | "好的", "ok", "got it", "收到" | No new knowledge |
+| Small talk | "天气真好", "周末有计划吗" | Not actionable |
+| Filler | "嗯嗯", "哈哈", "..." | Noise |
+| Vague responses | "可能吧", "我想想" | No commitment |
+
+#### Stage 3: Long-Term vs Short-Term Placement
+
+Content that passes scoring enters the memory system, but **where** it lands depends on context:
+
+```
+Score >= 0.25 + novel topic    → L2 new slot (long-term cognitive state)
+Score >= 0.25 + similar topic  → L2 update existing slot (knowledge merge)
+Score >= 0.20 + novel          → L2 moderate confidence slot
+Score < 0.20                   → stays in L1 only (short-term window)
+force=True                     → L2 directly (bypasses all scoring)
+```
+
+Once in L2, memories are **not permanent** — they compete for survival:
+- **Active memories** (frequently recalled) grow stronger via rehearsal
+- **Neglected memories** decay over time (Ebbinghaus curve)
+- **Weakest memories** get evicted to L3 cold storage (still searchable, just slower)
+- **All slots occupied + high activation?** Low-value new content is rejected entirely (saturation guard)
+
+This means the system naturally converges on storing what the user **actually uses**, not just what looked important at write time.
+
 ### Key Mechanisms
 
 **Selective Gate (Hybrid)** — Two evaluation paths, combined:
