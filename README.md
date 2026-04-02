@@ -2,6 +2,8 @@
 
 **AI Agent Cognitive Memory Engine** — Not another vector database. A memory system that thinks.
 
+[中文文档 (Chinese README)](README.zh-CN.md)
+
 Inspired by [Mamba3](https://arxiv.org/abs/2312.00752) (Selective State Space Model), MambaMemory brings SSM principles to AI agent memory management: selective gating, state decay, fixed-capacity evolution, and input-driven recall.
 
 ```
