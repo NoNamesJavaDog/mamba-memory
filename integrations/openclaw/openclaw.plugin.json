@@ -1,0 +1,36 @@
+{
+  "id": "memory-mamba",
+  "kind": "memory",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "dbPath": {
+        "type": "string",
+        "description": "Path to the MambaMemory SQLite database"
+      },
+      "embeddingProvider": {
+        "type": "string",
+        "enum": ["google", "openai", "local", "dummy", "auto"],
+        "description": "Which embedding backend to use"
+      },
+      "pythonPath": {
+        "type": "string",
+        "description": "Path to Python executable with mamba-memory installed"
+      }
+    }
+  },
+  "uiHints": {
+    "dbPath": {
+      "label": "Database Path",
+      "placeholder": "~/.mamba-memory/default.db"
+    },
+    "embeddingProvider": {
+      "label": "Embedding Provider"
+    },
+    "pythonPath": {
+      "label": "Python Path",
+      "placeholder": "python3"
+    }
+  }
+}

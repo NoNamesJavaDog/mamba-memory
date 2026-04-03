@@ -1,0 +1,23 @@
+{
+  "name": "@openclaw/memory-mamba",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MambaMemory integration — SSM-inspired cognitive memory engine",
+  "type": "module",
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.3.30"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}
