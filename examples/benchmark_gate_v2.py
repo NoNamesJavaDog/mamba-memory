@@ -316,13 +316,27 @@ def generate_augmented_dataset() -> list[Sample]:
     for f in farewells:
         samples.append(Sample(f, False, "farewell"))
 
-    # Vague / thinking
+    # Vague / thinking / deferral
+    # Key: these often contain decision/action WORDS but the intent is to DEFER
     vague = [
         "嗯", "hmm", "...", "让我想想", "我想想",
         "Maybe", "可能吧", "不确定", "不太清楚",
         "I'm not sure", "I think so", "Perhaps",
         "Well...", "看情况", "再说吧", "有空再看",
         "回头说", "到时候再决定", "TBD", "待定",
+        # Deferral with decision/action words (tricky cases)
+        "以后再选择用什么框架", "下次再决定部署方案",
+        "还没想好用什么数据库", "暂时不改配置",
+        "先不部署，等等看", "回头再说这个事",
+        "Let me think about which database to use",
+        "Haven't decided on the framework yet",
+        "Not sure yet, will decide later",
+        "Maybe we'll switch to Redis, not decided",
+        "I'll figure out the deployment later",
+        "还没确定", "尚未决定", "先不管这个",
+        "以后再处理", "这个不急", "下周再看",
+        "Pending review", "To be discussed",
+        "We'll see", "还在考虑中",
     ]
     for v in vague:
         samples.append(Sample(v, False, "vague"))

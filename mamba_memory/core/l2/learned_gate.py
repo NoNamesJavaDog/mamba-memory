@@ -17,7 +17,7 @@ Three learning modes:
 Why two-layer NN instead of logistic regression:
   - Can learn feature interactions (e.g., "short + has number" is a config value)
   - ReLU activation captures non-linear decision boundaries
-  - Still tiny: 62×16 + 16×1 = 1008 parameters, trains in <1ms per sample
+  - Still tiny: 66×16 + 16×1 = 1072 parameters, trains in <1ms per sample
 """
 
 from __future__ import annotations
@@ -48,14 +48,16 @@ from mamba_memory.core.text import _STOP_WORDS, _is_cjk, information_density, to
 # ---------------------------------------------------------------------------
 
 N_RULE_FEATURES = 15
-N_COMMAND_FEATURES = 5   # NEW: command/code detection
-N_CODE_FEATURES = 4      # NEW: path/config/code patterns
-N_SEMANTIC_FEATURES = 24  # UPGRADED: 8 → 24 (preserves more embedding info)
+N_NEGATION_FEATURES = 4  # NEW: negation/deferral context
+N_COMMAND_FEATURES = 5
+N_CODE_FEATURES = 4
+N_SEMANTIC_FEATURES = 24
 N_CONTEXT_FEATURES = 8
 N_PROFILE_FEATURES = 6
-N_FEATURES = (N_RULE_FEATURES + N_COMMAND_FEATURES + N_CODE_FEATURES
-              + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES + N_PROFILE_FEATURES)
-# = 15 + 5 + 4 + 24 + 8 + 6 = 62
+N_FEATURES = (N_RULE_FEATURES + N_NEGATION_FEATURES + N_COMMAND_FEATURES
+              + N_CODE_FEATURES + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES
+              + N_PROFILE_FEATURES)
+# = 15 + 4 + 5 + 4 + 24 + 8 + 6 = 66
 
 
 def extract_rule_features(content: str) -> np.ndarray:
@@ -86,6 +88,62 @@ def extract_rule_features(content: str) -> np.ndarray:
         features[12] = len(set(tokens)) / len(tokens)
     features[13] = 1.0 if _ACTION_PATTERNS.search(content) else 0.0
     features[14] = 1.0 if _FILLER_PATTERNS.match(content.strip()) else 0.0
+
+    return features
+
+
+# -- Negation / deferral detection
+# Catches: "到时候再决定", "以后再说", "let me think about it", "maybe later"
+# These contain action/decision words but the actual intent is to DEFER, not act.
+
+_DEFERRAL_PATTERNS = re.compile(
+    r"(到时候|以后|之后|下次|改天|等等|待|回头|later|maybe|perhaps|"
+    r"not\s+sure\s+yet|let\s+me\s+think|think\s+about\s+it|"
+    r"haven't\s+decided|not\s+decided|undecided|pending|TBD|"
+    r"再说|再看|再想|还没|尚未|暂时不|先不|不急)",
+    re.IGNORECASE,
+)
+
+_NEGATION_PATTERNS = re.compile(
+    r"(不是|并非|没有|未|别|不要|不用|无需|不必|"
+    r"not|no|never|don't|doesn't|didn't|won't|shouldn't|"
+    r"isn't|aren't|wasn't|can't|cannot|without)",
+    re.IGNORECASE,
+)
+
+_UNCERTAINTY_PATTERNS = re.compile(
+    r"(可能|也许|大概|或许|不确定|不太清楚|不知道|"
+    r"maybe|might|possibly|probably|not\s+sure|uncertain|"
+    r"I\s+guess|I\s+think\s+so|suppose|wonder)",
+    re.IGNORECASE,
+)
+
+
+def extract_negation_features(content: str) -> np.ndarray:
+    """Detect negation, deferral, and uncertainty (4 features).
+
+    Key insight: "到时候再决定" contains "决定" (decision keyword)
+    but "到时候再" flips the meaning to "defer". Without this feature,
+    the gate sees "决定" and stores it. With this feature, the deferral
+    signal counteracts the decision signal.
+    """
+    features = np.zeros(N_NEGATION_FEATURES, dtype=np.float32)
+    if not content.strip():
+        return features
+
+    # 0: Deferral signal (strongest — "do it later" = don't store now)
+    features[0] = 1.0 if _DEFERRAL_PATTERNS.search(content) else 0.0
+
+    # 1: Negation present
+    features[1] = 1.0 if _NEGATION_PATTERNS.search(content) else 0.0
+
+    # 2: Uncertainty / hedging
+    features[2] = 1.0 if _UNCERTAINTY_PATTERNS.search(content) else 0.0
+
+    # 3: Combined poison: deferral + decision word = definitely don't store
+    has_decision = bool(_DECISION_PATTERNS.search(content))
+    has_deferral = bool(_DEFERRAL_PATTERNS.search(content))
+    features[3] = 1.0 if (has_decision and has_deferral) else 0.0
 
     return features
 
@@ -445,15 +503,16 @@ class LearnedGate:
         content: str,
         embedding: list[float] | None = None,
     ) -> np.ndarray:
-        """Extract complete 62-dim feature vector."""
-        rule = extract_rule_features(content)        # 15
+        """Extract complete 66-dim feature vector."""
+        rule = extract_rule_features(content)         # 15
+        negation = extract_negation_features(content) # 4
         command = extract_command_features(content)   # 5
         code = extract_code_features(content)         # 4
         semantic = compress_embedding(embedding)      # 24
         context = extract_context_features(list(self._recent_topics), content)  # 8
         profile = self._profile.extract_features(content)  # 6
 
-        return np.concatenate([rule, command, code, semantic, context, profile])
+        return np.concatenate([rule, negation, command, code, semantic, context, profile])
 
     # -- Batch training ------------------------------------------------------
 

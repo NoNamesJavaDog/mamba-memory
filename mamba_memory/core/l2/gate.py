@@ -206,14 +206,31 @@ class Gate:
     def evaluate(self, inp: GateInput, slots: list[MemorySlot]) -> GateDecision:
         """Evaluate whether and how to write *inp* into the state layer."""
 
-        # Hybrid: use learned gate confidence if available, else rule-based
+        # Always compute rule-based importance
+        rule_importance = _importance_score(inp.content)
+
         if self._learned_gate is not None and self._learned_gate.trained:
-            confidence, should_store = self._learned_gate.predict(inp.content)
-            # Use learned confidence as importance, but still let rule engine
-            # handle slot allocation and write mode
-            importance = confidence if should_store else confidence * 0.3
+            # Ensemble: weighted combination of rule engine + neural gate
+            neural_conf, neural_store = self._learned_gate.predict(inp.content)
+            neural_importance = neural_conf if neural_store else neural_conf * 0.3
+
+            # Agreement check → confidence boost / disagreement → cautious
+            rule_store = rule_importance >= 0.20
+            if rule_store == neural_store:
+                # Both agree → use neural (it's more accurate) with confidence boost
+                importance = neural_importance
+            elif neural_conf > 0.9:
+                # Neural is very confident, rule disagrees → trust neural
+                importance = neural_importance
+            elif neural_conf < 0.3 and rule_importance > 0.3:
+                # Neural says discard (confident), rule says store → trust neural
+                # (neural catches deferral/negation that rules miss)
+                importance = neural_importance
+            else:
+                # Ambiguous disagreement → average both (cautious)
+                importance = 0.5 * rule_importance + 0.5 * neural_importance
         else:
-            importance = _importance_score(inp.content)
+            importance = rule_importance
 
         # Compute similarity against all non-empty slots that have embeddings
         similarities: list[tuple[int, float]] = []
