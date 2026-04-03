@@ -1,0 +1,2954 @@
+[
+  {
+    "content": "我决定把数据库从MySQL迁移到PostgreSQL 16",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "选择用Redis做缓存，Memcached不再维护了",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "前端框架确定采用React 18，配合Next.js",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "部署方案改用Kubernetes替代Docker Swarm",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "日志收集改成Loki，不用ELK了，太重了",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "消息队列最终选了Kafka，RabbitMQ并发扛不住",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "ORM用SQLAlchemy 2.0，不用Django ORM",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "搜索引擎从Solr切到Elasticsearch 8",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "状态管理确定用Zustand，比Redux轻量太多",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "监控体系全面切换到Prometheus+Grafana",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "API网关选定Kong，不用自研了",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "测试框架从unittest迁移到pytest",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "容器运行时从Docker切换到containerd",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "分布式锁用Redisson实现，别用数据库锁",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "配置中心从Apollo换成Nacos",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "图数据库最终选了Neo4j，ArangoDB社区太小",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "对象存储用MinIO自建，不依赖S3了",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "CI从Jenkins迁移到GitHub Actions",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "定时任务调度器换成Airflow",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "代码质量工具选SonarQube，配合pre-commit hooks",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "I decided to use FastAPI instead of Flask for the new service",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We're going with PostgreSQL over MongoDB for this project",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Let's adopt TypeScript for all new frontend code going forward",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Settled on Terraform for infrastructure as code",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "After evaluation, we chose gRPC over REST for internal services",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Switching from Yarn to pnpm for package management",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We've decided to go with Vercel for frontend hosting",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "The team agreed to use Conventional Commits going forward",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We're migrating from Heroku to AWS ECS for production",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Picked Tailwind CSS over styled-components for the redesign",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Going with Vite instead of Webpack for the build system",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Decided to use Prisma as the ORM for the Node.js backend",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We'll adopt trunk-based development instead of GitFlow",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Switching authentication from JWT to session-based with Redis",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Chose Playwright over Cypress for E2E testing",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Going serverless with AWS Lambda for the webhook handlers",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Adopted OpenTelemetry for distributed tracing",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We'll use Cloudflare Workers for edge computing",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "PostgreSQLを採用することに決定しました",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ja"
+  },
+  {
+    "content": "フロントエンドはReactからVueに変更します",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ja"
+  },
+  {
+    "content": "Redis를 캐시 솔루션으로 선택했습니다",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ko"
+  },
+  {
+    "content": "Kubernetes로 마이그레이션하기로 결정했습니다",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ko"
+  },
+  {
+    "content": "服务器IP是192.168.1.100，端口5432",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Redis配置：maxmemory 256MB, policy allkeys-lru",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "生产环境配置文件在 /etc/app/config.yaml",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "连接串：postgres://app:secret@prod-db:5432/myapp",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Nginx监听443端口，SSL证书路径/etc/ssl/certs/app.pem",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Kafka broker地址：10.0.1.10:9092,10.0.1.11:9092",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "ES集群3个节点，每个32GB内存，端口9200",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Docker registry地址：harbor.internal:5000",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "数据库连接池最大50个连接，超时30秒",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "API限流配置：普通用户100次/分钟，VIP 1000次/分钟",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "日志保留策略：生产环境30天，测试环境7天",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "域名api.example.com解析到CDN，源站10.0.0.5",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "定时任务cron表达式：0 3 * * * (每天凌晨3点)",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "服务注册中心Consul地址：consul.internal:8500",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "MinIO endpoint：http://minio.internal:9000, bucket: app-data",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Grafana dashboard地址：http://grafana.internal:3000/d/api-latency",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "JVM参数：-Xms2g -Xmx4g -XX:+UseG1GC",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "MongoDB副本集：rs0/mongo1:27017,mongo2:27017,mongo3:27017",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "K8s集群3个master节点，5个worker，用的是1.28版本",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "RabbitMQ vhost: /production, 用户: app_user",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "The API gateway runs on port 8080 with SSL termination",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Database backup runs daily at 3am UTC, retention 30 days",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "API rate limit: 100 req/min for free tier, 1000 for pro",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Redis Sentinel: 3 sentinels, quorum=2, master on port 6379",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Production server: 4 CPU cores, 16GB RAM, 500GB SSD",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "DNS TTL set to 300 seconds for api.example.com",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Elasticsearch index template: 3 primary shards, 1 replica",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "The CI pipeline timeout is set to 30 minutes max",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Load balancer health check: GET /health every 10 seconds",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "CORS allowed origins: https://app.example.com, https://admin.example.com",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "JWT token expiry: access 15min, refresh 7 days",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Prometheus scrape interval: 15s, evaluation interval: 15s",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "S3 bucket policy: only IAM role arn:aws:iam::123:role/app can write",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "PostgreSQL max_connections=200, shared_buffers=4GB",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "サーバーのIPは192.168.1.50、ポートは8080です",
+    "should_store": true,
+    "category": "fact",
+    "lang": "ja"
+  },
+  {
+    "content": "데이터베이스 포트는 5432이고 최대 연결 수는 100입니다",
+    "should_store": true,
+    "category": "fact",
+    "lang": "ko"
+  },
+  {
+    "content": "我喜欢用VS Code，不喜欢JetBrains的IDE",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "测试偏好用pytest，不用unittest",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "代码风格偏好snake_case，不用camelCase",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "习惯用Vim模式写代码，已经用了十年了",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "不喜欢用ORM，更倾向写原生SQL",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "文档偏好用Markdown写，不用Confluence",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "I prefer tabs over spaces, always 4-width",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "Recommend using async/await over callbacks in all new code",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "I like dark themes in all my editors and terminals",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "Prefer composition over inheritance in our codebase",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "Always use named exports, never default exports",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "I prefer monorepo structure for related services",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "不对，端口应该是8443不是8080",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "错了，密钥轮换周期是60天不是90天",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "其实数据库版本是16.2，不是16.0",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "搞错了，Redis用的是Cluster模式不是Sentinel",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "更正：生产环境的域名是api.prod.example.com",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "刚才说的不对，连接池大小是100不是50",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "之前说用MongoDB是错的，已经改回PostgreSQL了",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "Actually, the database is on port 5433, not 5432",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "Wait, I was wrong. The timeout should be 30s, not 60s",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "Sorry, I meant Redis 7.2 not 7.0",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "Correction: the S3 bucket name is prod-assets not prod-data",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "No, the API endpoint is /v2/users not /v1/users",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "Wrong, the deployment is on us-east-1 not us-west-2",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "记住：每周三凌晨2点执行数据库备份",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "别忘了：生产环境禁止使用root账户",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "务必记住：API密钥每90天必须轮换一次",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "重要：所有敏感数据必须加密存储",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "千万别忘：部署前必须跑完集成测试",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "牢记：线上数据库禁止直接执行DELETE语句",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "Remember: API keys must be rotated every 90 days",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "Important: never expose internal IPs in API responses",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "Don't forget: always tag Docker images with the git SHA",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "Keep in mind: the staging DB resets every Sunday night",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "Note: all new endpoints must have rate limiting enabled",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "Make sure to run migrations before deploying the new version",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "覚えて：本番環境では必ずログレベルをWARNに設定",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "ja"
+  },
+  {
+    "content": "下一步需要配置Prometheus监控告警",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "接下来要把日志从文件切换到ELK Stack",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "待办：给用户模块加上分页功能",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "本周内必须完成数据库索引优化",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "明天之前把单元测试覆盖率提到80%",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "需要给订单接口加上幂等性校验",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "下个迭代重构支付模块，当前技术债太多",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "TODO: add rate limiting to the /api/upload endpoint",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Need to set up automated database backups by Friday",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "FIXME: the connection pool leaks under high concurrency",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Next step: implement OAuth2 flow for third-party apps",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Action item: migrate all secrets to HashiCorp Vault",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Must upgrade Node.js to v22 before the security deadline",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Follow up: benchmark the new query after adding indexes",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "docker compose -f docker-compose.prod.yml up -d --build",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "kubectl apply -f deployment.yaml -n production",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "psql -h prod-db -U admin -d myapp -c 'SELECT count(*) FROM users'",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "terraform plan -var-file=prod.tfvars -out=plan.out",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "redis-cli -h cache-01 -p 6379 INFO memory",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "ssh -L 5432:prod-db:5432 bastion-host",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "curl -X POST https://api.example.com/deploy -H 'Authorization: Bearer $TOKEN'",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "git rebase -i HEAD~5 && git push --force-with-lease",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "ansible-playbook -i inventory/prod deploy.yml --tags=app",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "pip install -r requirements.txt && python manage.py migrate",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "mysqldump -h prod-db -u root -p mydb > backup_$(date +%Y%m%d).sql",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "helm upgrade --install myapp ./chart -f values-prod.yaml",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "aws s3 sync ./dist s3://prod-assets --delete --cache-control max-age=31536000",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "ERROR: ConnectionRefusedError: [Errno 111] Connection refused on port 5432",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "OOM Killed: container myapp exceeded memory limit 512Mi",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "Traceback: KeyError 'user_id' in handlers/auth.py line 42",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "Root cause: Redis maxmemory reached, allkeys-lru evicting active sessions",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "Bug: race condition in order creation when concurrent requests hit the same inventory",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "发现内存泄漏：每次请求后goroutine数量递增不释放",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "zh"
+  },
+  {
+    "content": "线上告警：API P99延迟超过2秒，原因是慢查询没走索引",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "zh"
+  },
+  {
+    "content": "502 Bad Gateway after deploying v3.2, nginx upstream timeout",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "SSL handshake failure: certificate expired on 2025-12-31",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "数据库死锁：事务A持有users表锁等待orders表，事务B反向",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "zh"
+  },
+  {
+    "content": "会议决定：Q2目标是将API响应时间降到200ms以下",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "张三负责后端重构，李四负责前端迁移，周五前完成",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "评审结论：新架构方案通过，下周开始实施",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "产品确认：用户注册流程简化为手机号+验证码，去掉邮箱",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "运维同意：生产环境扩容到8台机器，预算已批准",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "Sprint review: agreed to prioritize payment refund feature for next sprint",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "Tech lead approved the microservices migration plan, starting with auth service",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "Team agreed: all PRs need at least 2 approvals before merging to main",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "Postmortem conclusion: add circuit breaker to payment gateway calls",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "架构决策：采用CQRS模式分离读写，读用ES，写用PostgreSQL",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "选择事件驱动架构，服务间通过Kafka异步通信",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "数据库分库分表策略：按用户ID hash取模，分16个库",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "前后端分离，BFF层用GraphQL聚合多个微服务",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "采用Sidecar模式部署服务网格，用Istio做流量管控",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "Architecture decision: use event sourcing for the audit trail system",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "Adopting hexagonal architecture for the core domain services",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "Multi-tenant design: shared database with tenant_id column, not separate DBs",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "API versioning strategy: URL path (/v1/, /v2/) not headers",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "Caching strategy: L1 local cache (Caffeine 5min) + L2 Redis (1hr)",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "你好",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "嗨",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "早上好",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "下午好",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "晚上好",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "嘿",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "你好呀",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "Hello",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Hi there",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Hey!",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Good morning",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Good afternoon",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Good evening",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "What's up",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Howdy",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "こんにちは",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "ja"
+  },
+  {
+    "content": "おはようございます",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "ja"
+  },
+  {
+    "content": "こんばんは",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "ja"
+  },
+  {
+    "content": "안녕하세요",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "ko"
+  },
+  {
+    "content": "안녕",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "ko"
+  },
+  {
+    "content": "Bonjour",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "fr"
+  },
+  {
+    "content": "Hola",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "es"
+  },
+  {
+    "content": "Guten Tag",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "de"
+  },
+  {
+    "content": "Ciao",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "it"
+  },
+  {
+    "content": "好的",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "嗯嗯",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "嗯",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "收到",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "了解",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "明白",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "知道了",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "行",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "可以",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "没问题",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "谢谢",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "多谢",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "不客气",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "ok",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "okay",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "sure",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "got it",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "understood",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "roger",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "copy that",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "noted",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "thanks",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "thank you",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "No problem",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "You're welcome",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "Yes",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "yeah",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "yep",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "right",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "alright",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "fine",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "了解です",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ja"
+  },
+  {
+    "content": "はい",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ja"
+  },
+  {
+    "content": "わかりました",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ja"
+  },
+  {
+    "content": "네",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ko"
+  },
+  {
+    "content": "알겠습니다",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ko"
+  },
+  {
+    "content": "D'accord",
+    "should_store": false,
+    "category": "ack",
+    "lang": "fr"
+  },
+  {
+    "content": "今天天气真好",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "外面下雨了",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "周末有什么计划？",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "哈哈哈",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "笑死我了",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "今天好累啊",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "中午吃什么",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "你吃饭了吗",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "最近怎么样",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "加油",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "The weather is nice today",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Happy Friday!",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "TGIF",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "How's your day going?",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Did you watch the game last night?",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "lol",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "haha",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "That's funny",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "I'm so tired",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Coffee time",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Have a nice weekend",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Monday blues",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "到时候再决定",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "以后再选择用什么框架",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "下次再决定部署方案",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "还没想好用什么数据库",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "暂时不改配置",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "先不部署，等等看",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "回头再说这个事",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "这个不急，以后再看",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "还在考虑中",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "再说吧",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "还没确定",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "尚未决定",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "先不管这个",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "有空再看",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "下周再看",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "让我想想",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "我想想",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "可能吧",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "不确定",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "不太清楚",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "待定",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "Let me think about which database to use",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Haven't decided on the framework yet",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Not sure yet, will decide later",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Maybe we'll switch to Redis, not decided",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "I'll figure out the deployment later",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "TBD",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Pending review",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "To be discussed",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "We'll see",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "I'm not sure",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Perhaps",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Maybe",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "I think so",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "I guess",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Probably",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "再见",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "拜拜",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "晚安",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "回见",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "明天见",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "先走了",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "改天再聊",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "下次聊",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "bye",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "see you",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Good night",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "See you tomorrow",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Take care",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Catch you later",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Goodbye",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "さようなら",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "ja"
+  },
+  {
+    "content": "お疲れ様でした",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "ja"
+  },
+  {
+    "content": "안녕히 가세요",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "ko"
+  },
+  {
+    "content": "什么意思？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "怎么做？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "为什么？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "真的吗？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "你确定？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "能解释一下吗？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "这个是啥",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "哪个好",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "有什么区别？",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "怎么回事",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "What do you mean?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "How does this work?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Why?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Really?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Are you sure?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Can you explain?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "What's the difference?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Which one is better?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "How so?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "太好了！",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "厉害",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "牛逼",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "不错",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "赞",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "糟糕",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "完了",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "无语",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "醉了",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "加油💪",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "Amazing!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Awesome!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Nice!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Cool!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Great job!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Oh no",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Damn",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Brilliant!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Wow",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "👍",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "🎉",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "❤️",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "那部电影真好看",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "这家餐厅的火锅超赞",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "昨天的比赛你看了吗",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "最近在追一部新剧",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "我的猫今天又把花盆打翻了",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "准备周末去爬山",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "That movie was really good",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "I had the best pizza yesterday",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "My cat keeps knocking things off the desk",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "Planning a road trip this summer",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "The new iPhone looks interesting",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "Started reading a new book last night",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "后端语言统一用Go，新服务不再用Java了",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "缓存一致性策略选Cache-Aside模式",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "全链路压测工具选JMeter，放弃Locust",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "灰度发布方案用Canary部署，不用蓝绿",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "接口文档统一用Swagger/OpenAPI 3.0",
+    "should_store": true,
+    "category": "decision",
+    "lang": "zh"
+  },
+  {
+    "content": "Decided to use Rust for the performance-critical data pipeline",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Going with DynamoDB for the session store, not Redis",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Choosing Supabase over Firebase for the BaaS layer",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Adopting Nix for reproducible development environments",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "We'll use feature flags via LaunchDarkly instead of env vars",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "Switched the ML pipeline from TensorFlow to PyTorch",
+    "should_store": true,
+    "category": "decision",
+    "lang": "en"
+  },
+  {
+    "content": "ストレージはGCS（Google Cloud Storage）に決定",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ja"
+  },
+  {
+    "content": "CI/CDはGitHub Actionsに統一する方針にしました",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ja"
+  },
+  {
+    "content": "배포 방식을 Blue-Green에서 Canary로 변경합니다",
+    "should_store": true,
+    "category": "decision",
+    "lang": "ko"
+  },
+  {
+    "content": "Celery worker配置：concurrency=8, prefetch_multiplier=4",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "Sentry DSN: https://abc123@sentry.io/456",
+    "should_store": true,
+    "category": "fact",
+    "lang": "mixed"
+  },
+  {
+    "content": "GitHub webhook secret: whsec_xxxxx, 端口9000",
+    "should_store": true,
+    "category": "fact",
+    "lang": "mixed"
+  },
+  {
+    "content": "gRPC服务端口50051，health check端口50052",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "ECS task定义：CPU 1024, Memory 2048, 最小实例2个",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "DataDog agent端口8126，APM采样率10%",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "VPN网关地址：vpn.company.com:1194, 协议OpenVPN",
+    "should_store": true,
+    "category": "fact",
+    "lang": "zh"
+  },
+  {
+    "content": "CDN缓存策略：HTML 0s, JS/CSS 1year, images 30days",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "PagerDuty escalation policy: 5min → on-call, 15min → team lead",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Feature flag rollout: 1% → 5% → 25% → 50% → 100%",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Terraform state stored in S3 bucket: tf-state-prod-us-east-1",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "GitHub Actions runner: ubuntu-latest, Node 22, Python 3.12",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Database connection string uses SSL mode=verify-full",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "Auto-scaling policy: scale up at CPU>70%, scale down at CPU<30%",
+    "should_store": true,
+    "category": "fact",
+    "lang": "en"
+  },
+  {
+    "content": "ポート番号は3000で、環境変数NODE_ENVはproduction",
+    "should_store": true,
+    "category": "fact",
+    "lang": "ja"
+  },
+  {
+    "content": "API 요청 제한: 분당 500건, 초과 시 429 응답",
+    "should_store": true,
+    "category": "fact",
+    "lang": "ko"
+  },
+  {
+    "content": "纠正一下，CDN供应商是Cloudflare不是CloudFront",
+    "should_store": true,
+    "category": "correction",
+    "lang": "zh"
+  },
+  {
+    "content": "Wait, the memory limit should be 4GB, I said 2GB earlier",
+    "should_store": true,
+    "category": "correction",
+    "lang": "en"
+  },
+  {
+    "content": "実は、デプロイ先はAWSではなくGCPでした",
+    "should_store": true,
+    "category": "correction",
+    "lang": "ja"
+  },
+  {
+    "content": "아, 포트 번호가 3000이 아니라 3001이었습니다",
+    "should_store": true,
+    "category": "correction",
+    "lang": "ko"
+  },
+  {
+    "content": "千万记住：线上禁止执行DROP TABLE",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "zh"
+  },
+  {
+    "content": "For future reference: the admin panel password resets every 30 days",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "en"
+  },
+  {
+    "content": "忘れないで：ステージング環境のデータは毎週リセット",
+    "should_store": true,
+    "category": "explicit",
+    "lang": "ja"
+  },
+  {
+    "content": "SELECT pg_size_pretty(pg_database_size('mydb'))",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "docker stats --no-stream --format 'table {{.Name}}\\t{{.MemUsage}}'",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "kubectl get pods -n production -o wide | grep -v Running",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "pg_dump -Fc mydb | aws s3 cp - s3://backups/mydb-$(date +%s).dump",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "certbot renew --dry-run && systemctl reload nginx",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "EXPLAIN ANALYZE SELECT * FROM orders WHERE created_at > now() - interval '1 day'",
+    "should_store": true,
+    "category": "command",
+    "lang": "en"
+  },
+  {
+    "content": "FATAL: too many connections for role 'app_user', max=100",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "WARNING: disk usage at 92% on /data volume, pod may be evicted",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "慢查询告警：SELECT * FROM users WHERE email LIKE '%@gmail.com' 耗时12秒",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "zh"
+  },
+  {
+    "content": "证书过期导致HTTPS握手失败，影响所有API调用",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "zh"
+  },
+  {
+    "content": "Kafka consumer lag exceeded 10000 on topic: order-events",
+    "should_store": true,
+    "category": "error_log",
+    "lang": "en"
+  },
+  {
+    "content": "安全评审结论：密码必须至少12位，含大小写+数字+特殊字符",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "Tech debt review: allocated 20% of next sprint for refactoring auth module",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "Stakeholder approved: sunset legacy API v1 by end of Q3",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "en"
+  },
+  {
+    "content": "SLA确认：核心API可用性99.9%，响应时间P95<500ms",
+    "should_store": true,
+    "category": "meeting_note",
+    "lang": "zh"
+  },
+  {
+    "content": "异步任务重试策略：指数退避，最大重试3次，间隔1s/4s/16s",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "Data pipeline architecture: Kafka → Flink → ClickHouse → Grafana",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "Auth flow: OAuth2 PKCE for SPA, client credentials for service-to-service",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "分库策略：订单按user_id%16，商品按category_id分区",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "zh"
+  },
+  {
+    "content": "Disaster recovery: RPO=1hr (hourly backups), RTO=4hr (failover to DR site)",
+    "should_store": true,
+    "category": "architecture",
+    "lang": "en"
+  },
+  {
+    "content": "紧急：今天下班前修复支付回调超时问题",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "Urgent: patch the log4j vulnerability before end of day",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Sprint goal: complete user authentication refactoring",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "明天演示前把首页加载速度优化到2秒以内",
+    "should_store": true,
+    "category": "action",
+    "lang": "zh"
+  },
+  {
+    "content": "Deadline Friday: migrate all environment variables to Vault",
+    "should_store": true,
+    "category": "action",
+    "lang": "en"
+  },
+  {
+    "content": "Prefer small PRs, max 300 lines of change per PR",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "习惯先写测试再写实现，TDD方式开发",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "I like keeping functions under 20 lines, extract if longer",
+    "should_store": true,
+    "category": "preference",
+    "lang": "en"
+  },
+  {
+    "content": "偏好用docker-compose本地开发，不直接装服务",
+    "should_store": true,
+    "category": "preference",
+    "lang": "zh"
+  },
+  {
+    "content": "好嘞",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "得嘞",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "哦",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "好好好",
+    "should_store": false,
+    "category": "ack",
+    "lang": "zh"
+  },
+  {
+    "content": "Ack",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "Sounds good",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "Makes sense",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "Fair enough",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "I see",
+    "should_store": false,
+    "category": "ack",
+    "lang": "en"
+  },
+  {
+    "content": "なるほど",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ja"
+  },
+  {
+    "content": "그렇군요",
+    "should_store": false,
+    "category": "ack",
+    "lang": "ko"
+  },
+  {
+    "content": "也许以后用Rust重写核心模块吧",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "之后看看要不要加缓存",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "容器化的事情以后再说",
+    "should_store": false,
+    "category": "vague",
+    "lang": "zh"
+  },
+  {
+    "content": "Maybe we should consider microservices someday",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Might switch to GraphQL eventually, not now though",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Could potentially use Kubernetes, but it's overkill for now",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "We should probably look into this later",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "Let's revisit this next quarter",
+    "should_store": false,
+    "category": "vague",
+    "lang": "en"
+  },
+  {
+    "content": "いつかDockerに移行するかもしれません",
+    "should_store": false,
+    "category": "vague",
+    "lang": "ja"
+  },
+  {
+    "content": "这个怎么部署的",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "数据库密码在哪里",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "线上有多少台机器",
+    "should_store": false,
+    "category": "question",
+    "lang": "zh"
+  },
+  {
+    "content": "What port does the API run on?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "When was the last deployment?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Who has access to the production database?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Is the CI pipeline still broken?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "Can we use a different library for this?",
+    "should_store": false,
+    "category": "question",
+    "lang": "en"
+  },
+  {
+    "content": "この機能はいつリリースされますか？",
+    "should_store": false,
+    "category": "question",
+    "lang": "ja"
+  },
+  {
+    "content": "이 API는 어떻게 호출하나요?",
+    "should_store": false,
+    "category": "question",
+    "lang": "ko"
+  },
+  {
+    "content": "终于搞定了！",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "头疼",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "服了",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "zh"
+  },
+  {
+    "content": "Finally!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Ugh",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Yay!",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "That's frustrating",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "Love it",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "en"
+  },
+  {
+    "content": "やった！",
+    "should_store": false,
+    "category": "emotion",
+    "lang": "ja"
+  },
+  {
+    "content": "新出的咖啡机真不错",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "昨天去健身了，今天浑身酸痛",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "有人一起打球吗",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "zh"
+  },
+  {
+    "content": "Just got a new mechanical keyboard, love the sound",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "Anyone watching the World Cup tonight?",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "The office coffee machine is broken again",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "Traffic was terrible this morning",
+    "should_store": false,
+    "category": "offtopic",
+    "lang": "en"
+  },
+  {
+    "content": "好困啊",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "又到周五了",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "快下班了",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "zh"
+  },
+  {
+    "content": "Almost weekend!",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Time flies",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Long day",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "Same old same old",
+    "should_store": false,
+    "category": "smalltalk",
+    "lang": "en"
+  },
+  {
+    "content": "嗨嗨",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "哈喽",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "zh"
+  },
+  {
+    "content": "Yo",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Sup",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "Heya",
+    "should_store": false,
+    "category": "greeting",
+    "lang": "en"
+  },
+  {
+    "content": "走了走了",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "撤了",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "zh"
+  },
+  {
+    "content": "Peace out",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Later!",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  },
+  {
+    "content": "Gotta go",
+    "should_store": false,
+    "category": "farewell",
+    "lang": "en"
+  }
+]

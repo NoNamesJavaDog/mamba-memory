@@ -17,7 +17,7 @@ Three learning modes:
 Why two-layer NN instead of logistic regression:
   - Can learn feature interactions (e.g., "short + has number" is a config value)
   - ReLU activation captures non-linear decision boundaries
-  - Still tiny: 66×16 + 16×1 = 1072 parameters, trains in <1ms per sample
+  - Still tiny: 72×16 + 16×1 = 1168 parameters, trains in <1ms per sample
 """
 
 from __future__ import annotations
@@ -48,16 +48,18 @@ from mamba_memory.core.text import _STOP_WORDS, _is_cjk, information_density, to
 # ---------------------------------------------------------------------------
 
 N_RULE_FEATURES = 15
-N_NEGATION_FEATURES = 4  # NEW: negation/deferral context
+N_NEGATION_FEATURES = 4
+N_QUESTION_FEATURES = 3  # NEW: question detection
+N_OFFTOPIC_FEATURES = 3  # NEW: off-topic / non-technical
 N_COMMAND_FEATURES = 5
 N_CODE_FEATURES = 4
 N_SEMANTIC_FEATURES = 24
 N_CONTEXT_FEATURES = 8
 N_PROFILE_FEATURES = 6
-N_FEATURES = (N_RULE_FEATURES + N_NEGATION_FEATURES + N_COMMAND_FEATURES
-              + N_CODE_FEATURES + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES
-              + N_PROFILE_FEATURES)
-# = 15 + 4 + 5 + 4 + 24 + 8 + 6 = 66
+N_FEATURES = (N_RULE_FEATURES + N_NEGATION_FEATURES + N_QUESTION_FEATURES
+              + N_OFFTOPIC_FEATURES + N_COMMAND_FEATURES + N_CODE_FEATURES
+              + N_SEMANTIC_FEATURES + N_CONTEXT_FEATURES + N_PROFILE_FEATURES)
+# = 15 + 4 + 3 + 3 + 5 + 4 + 24 + 8 + 6 = 72
 
 
 def extract_rule_features(content: str) -> np.ndarray:
@@ -100,7 +102,10 @@ _DEFERRAL_PATTERNS = re.compile(
     r"(到时候|以后|之后|下次|改天|等等|待|回头|later|maybe|perhaps|"
     r"not\s+sure\s+yet|let\s+me\s+think|think\s+about\s+it|"
     r"haven't\s+decided|not\s+decided|undecided|pending|TBD|"
-    r"再说|再看|再想|还没|尚未|暂时不|先不|不急)",
+    r"再说|再看|再想|还没|尚未|暂时不|先不|不急|"
+    r"someday|eventually|not\s+now|overkill\s+for\s+now|"
+    r"revisit|look\s+into\s+.{0,10}later|next\s+quarter|"
+    r"看看要不要|考虑.*以后|等.*再|いつか|かもしれません)",
     re.IGNORECASE,
 )
 
@@ -144,6 +149,81 @@ def extract_negation_features(content: str) -> np.ndarray:
     has_decision = bool(_DECISION_PATTERNS.search(content))
     has_deferral = bool(_DEFERRAL_PATTERNS.search(content))
     features[3] = 1.0 if (has_decision and has_deferral) else 0.0
+
+    return features
+
+
+# -- Question detection (catches "怎么做?", "How?", "この機能はいつ？")
+_QUESTION_PATTERNS = re.compile(
+    r"(吗[？?]?$|呢[？?]?$|[？?]$|\?$|"  # Ends with question mark/particle
+    r"^(什么|怎么|为什么|哪|谁|几|多少|是否|有没有|能不能|可不可以)|"  # zh question words at start
+    r"^(what|how|why|when|where|who|which|is\s+there|are\s+there|can\s+we|"
+    r"do\s+we|does|did|will|should|could)\b|"  # en question words at start
+    r"^(何|どう|いつ|どこ|なぜ|誰)|"  # ja question words
+    r"^(뭐|어떻게|왜|언제|어디|누가))",  # ko question words
+    re.IGNORECASE | re.MULTILINE,
+)
+
+_QUESTION_ONLY = re.compile(
+    r"^[^.。！!]*[？?\?]$",  # Entire content is a question (ends with ?, nothing after)
+    re.MULTILINE,
+)
+
+
+def extract_question_features(content: str) -> np.ndarray:
+    """Detect if content is a question asking for info (not providing it)."""
+    features = np.zeros(N_QUESTION_FEATURES, dtype=np.float32)
+    stripped = content.strip()
+
+    # 0: Has question pattern
+    features[0] = 1.0 if _QUESTION_PATTERNS.search(stripped) else 0.0
+
+    # 1: Is ONLY a question (no answer/statement mixed in)
+    features[1] = 1.0 if _QUESTION_ONLY.match(stripped) else 0.0
+
+    # 2: Short question (likely asking, not explaining)
+    features[2] = 1.0 if features[0] > 0 and len(stripped) < 30 else 0.0
+
+    return features
+
+
+# -- Off-topic / non-technical detection
+_OFFTOPIC_PATTERNS = re.compile(
+    r"(电影|电视剧|追剧|综艺|比赛|球赛|世界杯|奥运|"
+    r"餐厅|火锅|咖啡|奶茶|美食|健身|爬山|旅游|"
+    r"猫|狗|宠物|打球|游戏|手机|键盘|"
+    r"movie|film|show|game|match|cup|"
+    r"restaurant|pizza|coffee|gym|workout|travel|vacation|"
+    r"cat|dog|pet|keyboard|phone|weather|traffic|"
+    r"weekend|holiday|birthday|party)",
+    re.IGNORECASE,
+)
+
+_TECH_PATTERNS = re.compile(
+    r"(server|database|API|port|deploy|config|docker|kubernetes|k8s|"
+    r"redis|postgres|mysql|nginx|aws|gcp|azure|git|CI|CD|"
+    r"服务器|数据库|接口|端口|部署|配置|集群|监控|日志|"
+    r"缓存|索引|查询|备份|证书|密钥|权限|"
+    r"function|class|module|import|export|return|async|"
+    r"error|bug|fix|test|build|release|version|"
+    r"http|https|ssl|tls|tcp|udp|dns|ssh|"
+    r"npm|pip|docker|kubectl|terraform|ansible)",
+    re.IGNORECASE,
+)
+
+
+def extract_offtopic_features(content: str) -> np.ndarray:
+    """Detect non-technical/off-topic content."""
+    features = np.zeros(N_OFFTOPIC_FEATURES, dtype=np.float32)
+
+    # 0: Has off-topic keywords
+    features[0] = 1.0 if _OFFTOPIC_PATTERNS.search(content) else 0.0
+
+    # 1: Has NO technical keywords (strong non-tech signal)
+    features[1] = 0.0 if _TECH_PATTERNS.search(content) else 1.0
+
+    # 2: Off-topic + no tech = definitely off-topic
+    features[2] = 1.0 if features[0] > 0 and features[1] > 0 else 0.0
 
     return features
 
@@ -503,16 +583,18 @@ class LearnedGate:
         content: str,
         embedding: list[float] | None = None,
     ) -> np.ndarray:
-        """Extract complete 66-dim feature vector."""
-        rule = extract_rule_features(content)         # 15
-        negation = extract_negation_features(content) # 4
-        command = extract_command_features(content)   # 5
-        code = extract_code_features(content)         # 4
-        semantic = compress_embedding(embedding)      # 24
+        """Extract complete 72-dim feature vector."""
+        rule = extract_rule_features(content)          # 15
+        negation = extract_negation_features(content)  # 4
+        question = extract_question_features(content)  # 3
+        offtopic = extract_offtopic_features(content)  # 3
+        command = extract_command_features(content)    # 5
+        code = extract_code_features(content)          # 4
+        semantic = compress_embedding(embedding)       # 24
         context = extract_context_features(list(self._recent_topics), content)  # 8
         profile = self._profile.extract_features(content)  # 6
 
-        return np.concatenate([rule, negation, command, code, semantic, context, profile])
+        return np.concatenate([rule, negation, question, offtopic, command, code, semantic, context, profile])
 
     # -- Batch training ------------------------------------------------------
 

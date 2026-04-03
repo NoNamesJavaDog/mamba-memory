@@ -13,6 +13,7 @@ from __future__ import annotations
 import random
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import numpy as np
 
@@ -472,9 +473,19 @@ def main():
     print(f"  Gate v2 Benchmark — Data Augmentation + Cross-Validation")
     print(f"{'█' * 60}")
 
-    # ── Phase 1: Generate data ──────────────────────────────
-    print(f"\n{BOLD}Phase 1: Data Augmentation{RESET}")
-    dataset = generate_augmented_dataset()
+    # ── Phase 1: Load or generate data ──────────────────────
+    print(f"\n{BOLD}Phase 1: Training Data{RESET}")
+
+    # Try loading external dataset first (larger, hand-curated)
+    data_path = Path(__file__).parent.parent / "data" / "training_data.json"
+    if data_path.exists():
+        import json as _json
+        raw = _json.loads(data_path.read_text(encoding="utf-8"))
+        dataset = [Sample(d["content"], d["should_store"], d["category"]) for d in raw]
+        print(f"  Loaded {len(dataset)} samples from {data_path.name}")
+    else:
+        dataset = generate_augmented_dataset()
+        print(f"  Generated {len(dataset)} samples (template-based)")
 
     # Count by category and label
     store_count = sum(1 for s in dataset if s.should_store)
