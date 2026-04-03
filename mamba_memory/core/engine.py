@@ -178,20 +178,10 @@ class MambaMemoryEngine:
         self._started = True
 
     async def shutdown(self) -> None:
-        """Save final snapshot, learned gate model, and close resources."""
+        """Checkpoint all state and close resources."""
         if self._l2 and self._l3:
-            snap = self._l2.snapshot(self._session_id)
-            self._l3.save_snapshot(snap)
+            self._checkpoint()
             self._l3.close()
-        # Persist learned gate model
-        if self._learned_gate and self._learned_gate.trained:
-            try:
-                model_path = os.path.expanduser(
-                    os.path.join(os.path.dirname(self.config.l3.db_path), "gate_model.json")
-                )
-                self._learned_gate.save(model_path)
-            except Exception:
-                pass
         self._started = False
 
     # -- Write path ----------------------------------------------------------
@@ -297,10 +287,9 @@ class MambaMemoryEngine:
         if all_entities:
             self._update_entity_graph(all_entities, content=content)
 
-        # Periodic L2 → L3 snapshot
+        # Periodic checkpoint (crash-safe: survives kill -9 / power loss)
         if self.l2.step_count % self.config.l2.snapshot_interval == 0 and self.l2.step_count > 0:
-            snap = self.l2.snapshot(self._session_id)
-            self.l3.save_snapshot(snap)
+            self._checkpoint()
 
         return IngestResult(
             stored=stored_in_l2,
@@ -492,6 +481,31 @@ class MambaMemoryEngine:
             l3_archived_records=self.l3.record_count(archived=True),
             l3_entity_count=self.l3.entity_count(),
         )
+
+    # -- Checkpoint (crash safety) ---------------------------------------------
+
+    def _checkpoint(self) -> None:
+        """Flush all volatile state to disk. Survives kill -9 / power loss.
+
+        Called every snapshot_interval steps (default: 50).
+        Saves: L2 snapshot + HNSW index + learned gate model.
+        """
+        # L2 state snapshot → SQLite
+        snap = self.l2.snapshot(self._session_id)
+        self.l3.save_snapshot(snap)
+
+        # HNSW vector index → disk
+        self.l3._save_hnsw_index()
+
+        # Learned gate model → JSON
+        if self._learned_gate and self._learned_gate.trained:
+            try:
+                model_path = os.path.expanduser(
+                    os.path.join(os.path.dirname(self.config.l3.db_path), "gate_model.json")
+                )
+                self._learned_gate.save(model_path)
+            except Exception:
+                pass
 
     # -- Internal ------------------------------------------------------------
 
