@@ -153,20 +153,31 @@ def extract_negation_features(content: str) -> np.ndarray:
     return features
 
 
-# -- Question detection (catches "怎么做?", "How?", "この機能はいつ？")
-_QUESTION_PATTERNS = re.compile(
-    r"(吗[？?]?$|呢[？?]?$|[？?]$|\?$|"  # Ends with question mark/particle
-    r"^(什么|怎么|为什么|哪|谁|几|多少|是否|有没有|能不能|可不可以)|"  # zh question words at start
-    r"^(what|how|why|when|where|who|which|is\s+there|are\s+there|can\s+we|"
-    r"do\s+we|does|did|will|should|could)\b|"  # en question words at start
-    r"^(何|どう|いつ|どこ|なぜ|誰)|"  # ja question words
-    r"^(뭐|어떻게|왜|언제|어디|누가))",  # ko question words
-    re.IGNORECASE | re.MULTILINE,
+# -- Question detection
+# Must catch: "这个怎么部署的", "数据库密码在哪里", "Is the CI pipeline still broken?"
+# Key: question words can appear ANYWHERE in Chinese, not just at the start.
+
+_QUESTION_END = re.compile(
+    r"[？?]$|\?$|吗$|呢$|吧$|么$",  # Ends with question mark or particle
 )
 
-_QUESTION_ONLY = re.compile(
-    r"^[^.。！!]*[？?\?]$",  # Entire content is a question (ends with ?, nothing after)
-    re.MULTILINE,
+_QUESTION_WORDS_ANYWHERE = re.compile(
+    r"(什么|怎么|为什么|哪里|哪个|哪些|谁|几个|多少|是否|"
+    r"有没有|能不能|可不可以|在哪|是啥|咋|啥时候|怎样|如何)",  # zh anywhere
+    re.IGNORECASE,
+)
+
+_QUESTION_WORDS_EN_START = re.compile(
+    r"^(what|how|why|when|where|who|which|whose|whom|"
+    r"is\s+there|are\s+there|is\s+the|are\s+the|was\s+the|"
+    r"can\s+we|can\s+I|do\s+we|does|did|will|should|could|would|"
+    r"have\s+you|has\s+the|is\s+it|are\s+you)\b",
+    re.IGNORECASE,
+)
+
+_QUESTION_WORDS_JAKO = re.compile(
+    r"(何|どう|いつ|どこ|なぜ|誰|どれ|どの|ですか|ますか|"  # ja
+    r"뭐|어떻게|왜|언제|어디|누가|인가요|입니까|나요)",       # ko
 )
 
 
@@ -175,14 +186,21 @@ def extract_question_features(content: str) -> np.ndarray:
     features = np.zeros(N_QUESTION_FEATURES, dtype=np.float32)
     stripped = content.strip()
 
-    # 0: Has question pattern
-    features[0] = 1.0 if _QUESTION_PATTERNS.search(stripped) else 0.0
+    # 0: Has ANY question signal (anywhere in text, not just start)
+    has_q = (
+        bool(_QUESTION_END.search(stripped))
+        or bool(_QUESTION_WORDS_ANYWHERE.search(stripped))
+        or bool(_QUESTION_WORDS_EN_START.search(stripped))
+        or bool(_QUESTION_WORDS_JAKO.search(stripped))
+    )
+    features[0] = 1.0 if has_q else 0.0
 
-    # 1: Is ONLY a question (no answer/statement mixed in)
-    features[1] = 1.0 if _QUESTION_ONLY.match(stripped) else 0.0
+    # 1: Question with NO answer embedded (no "=", ":", numbers after colon)
+    has_answer_signal = bool(re.search(r"[:=：]\s*\S+|→|->|端口\s*\d|port\s*\d", stripped, re.I))
+    features[1] = 1.0 if has_q and not has_answer_signal else 0.0
 
-    # 2: Short question (likely asking, not explaining)
-    features[2] = 1.0 if features[0] > 0 and len(stripped) < 30 else 0.0
+    # 2: Short question (< 25 chars, likely asking not explaining)
+    features[2] = 1.0 if has_q and len(stripped) < 25 else 0.0
 
     return features
 
