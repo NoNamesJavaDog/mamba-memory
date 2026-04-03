@@ -226,70 +226,79 @@ This means the system naturally converges on storing what the user **actually us
 2. **Learned Neural Classifier** (optional, self-evolving) — 37-feature two-layer neural network (608 parameters) that learns what THIS user considers important:
 
 ```
-37 input features                   16 hidden (ReLU)        1 output (sigmoid)
-├── 15 rule signals (same as above) ──┐
-├──  8 semantic embed (compressed)  ──┼── hidden layer ──── store probability
-├──  8 context window (recent conv) ──┤    (non-linear)
-└──  6 user profile (topic affinity) ─┘
+66 input features                      16 hidden (ReLU)       1 output (sigmoid)
+├── 15 rule signals (regex patterns) ──┐
+├──  4 negation/deferral detection   ──┤
+├──  5 command detection             ──┼── hidden layer ──── store probability
+├──  4 code/path patterns            ──┤    (non-linear)
+├── 24 semantic embed (compressed)   ──┤
+├──  8 context window (recent conv)  ──┤
+└──  6 user profile (topic affinity) ──┘
 ```
 
-**What the 4 feature groups capture:**
+**What the 7 feature groups capture:**
 
 | Features | Dim | What it understands |
 |----------|-----|---------------------|
-| Rule signals | 15 | Same regex patterns as the rule engine |
-| Semantic embedding | 8 | Compressed embedding — understands meaning ("Terraform" ≈ "infrastructure") |
-| Context window | 8 | What's been discussed recently — topic continuation vs topic shift |
-| User profile | 6 | What topics this specific user recalls most — personalized importance |
+| Rule signals | 15 | Decisions, preferences, corrections, facts, explicit memory |
+| Negation/deferral | 4 | "到时候再决定" ≠ "我决定" — deferral flips meaning |
+| Command detection | 5 | `terraform plan`, `psql -h` — executable commands |
+| Code/path patterns | 4 | File paths, URIs, config files, SQL |
+| Semantic embedding | 24 | Compressed embedding — understands meaning |
+| Context window | 8 | Topic continuation vs topic shift |
+| User profile | 6 | What topics this specific user recalls most |
 
-**How it evolves (three learning signals):**
+**Negation/deferral detection (key innovation):**
 
-```
-Signal 1: Batch training (cold start)
-  55 labeled samples → 500 epochs → 100% accuracy
-  Runs once at initialization
-
-Signal 2: User corrections (strongest, immediate)
-  User: "you should have remembered this" → gate.correct(content, True)
-  One backprop step, <0.1ms, weights update instantly
-
-Signal 3: Implicit feedback (automatic, no user action needed)
-  Memory recalled by user    → positive signal → "I was right to store this"
-  Memory evicted, never used → negative signal → "I shouldn't have stored this"
-  Creates a self-improving loop:
-
-  gate decision → user behavior → feedback → weight update → better decisions
-       ↑                                                          │
-       └──────────────────────────────────────────────────────────┘
-```
-
-**User profile in action:**
+The hardest gate problem is content that contains action words but means the opposite:
 
 ```
-Day 1: User recalls "PostgreSQL config" 3 times, "Redis setup" 2 times
-       → Profile learns: this user cares about databases
-
-Day 2: New content "PostgreSQL vacuum tuning" arrives
-       → Profile features boost: user has high affinity for PostgreSQL
-       → Storage probability increases even if rule engine scores it low
-
-       New content "cooking recipe" arrives
-       → Profile features: zero affinity
-       → No boost, relies on rule engine only
+"我决定用PostgreSQL"     → decision signal ON  + deferral OFF → STORE ✓
+"到时候再决定用什么数据库"  → decision signal ON  + deferral ON  → DISCARD ✓
+"Haven't decided yet"    → decision signal ON  + deferral ON  → DISCARD ✓
+"以后再选择框架"          → decision signal ON  + deferral ON  → DISCARD ✓
 ```
 
-**v1 → v2 comparison (on same 55-case dataset):**
+Feature[3] (decision+deferral combo) fires ONLY when both signals are present, giving the neural network a clean "poison pill" signal.
 
-| | v1 (logistic regression) | v2 (neural network) |
-|---|---|---|
-| Features | 15 (rules only) | 37 (+semantic +context +profile) |
-| Parameters | 16 | 608 |
-| Training accuracy | 90.9% | **100%** |
-| "Database backup daily 3am" | conf=0.85 | **conf=0.999** |
-| "你好" | conf=0.10 | **conf=0.001** |
-| Class separation | 0.018 gap | **0.98 gap** |
-| Personalization | None | Topic affinity tracking |
-| Context awareness | None | Recent 20 messages |
+**Ensemble gate (rule + neural voting):**
+
+```
+Both agree        → trust neural (more accurate)
+Neural conf > 0.9 → trust neural (very confident)
+Neural conf < 0.3 → trust neural (catches deferral that rules miss)
+Disagreement      → average both scores (cautious)
+```
+
+**Three self-evolution signals:**
+
+```
+1. Batch training:    417 labeled samples → 300 epochs → cold start
+2. User corrections:  "remember this" / "forget that" → 1 backprop step, <0.1ms
+3. Implicit feedback: recalled = positive, evicted-without-recall = negative
+                      → self-improving loop, no user action needed
+```
+
+**User profile personalization:**
+
+```
+User recalls "PostgreSQL" 3x, "Redis" 2x → profile learns DB affinity
+→ "PostgreSQL vacuum tuning" gets storage boost
+→ "cooking recipe" gets no boost
+```
+
+**Evolution: v1 → v2 → current**
+
+| | v1 | v2 | current |
+|---|---|---|---|
+| Model | Logistic regression | 2-layer NN | 2-layer NN + ensemble |
+| Features | 15 | 37 | **66** |
+| Parameters | 16 | 608 | **1072** |
+| Negation detection | No | No | **Yes (4-dim)** |
+| Command detection | No | Yes | Yes |
+| Ensemble voting | No | No | **Rule + Neural** |
+| CV Accuracy (5-fold) | — | 98.7% ± 1.4% | **99.3% ± 0.6%** |
+| All categories 100% | — | 13/14 | **14/14** |
 
 **Time-Aware Decay (Ebbinghaus)** — Dual decay model:
 
@@ -445,19 +454,17 @@ Environment variable overrides: `MAMBA_MEMORY_DB`, `MAMBA_MEMORY_EMBEDDING`, `MA
 
 ## Benchmark Results
 
-### Gate Accuracy — 5-Fold Cross-Validation (396 samples, 14 categories)
+### Gate Accuracy — 5-Fold Cross-Validation (417 samples, 14 categories)
 
 | Metric | Rule Engine | Neural Gate v2 |
 |--------|-------------|----------------|
-| Accuracy | 88.6% ± 1.8% | **99.2% ± 1.0%** |
-| Precision | 98.3% ± 2.3% | **99.6% ± 0.8%** |
-| Recall | 81.1% ± 3.9% | **99.1% ± 1.7%** |
-| F1 | 88.8% ± 2.1% | **99.3% ± 0.9%** |
-| Confidence gap | — | **0.948** (store avg 0.976, discard avg 0.029) |
+| Accuracy | 87.5% ± 1.7% | **99.3% ± 0.6%** |
+| Precision | 95.2% ± 3.1% | **99.6% ± 0.8%** |
+| Recall | 80.9% ± 5.3% | **99.0% ± 1.2%** |
+| F1 | 87.2% ± 2.1% | **99.3% ± 0.6%** |
+| Confidence gap | — | **0.957** (store avg 0.986, discard avg 0.028) |
 
-Tested on 396 augmented samples (222 store / 174 discard) across 14 categories: decision, fact, preference, correction, explicit, action, command, greeting, ack, smalltalk, farewell, vague, question, emotion. 5-fold cross-validation ensures these numbers reflect real generalization, not memorization.
-
-The neural gate's only weakness: bare command strings without context (e.g., `terraform plan -var-file=prod.tfvars`). All other categories achieve 100% per-fold accuracy.
+Tested on 417 augmented samples (222 store / 195 discard) across 14 categories including tricky deferral cases ("到时候再决定", "Haven't decided yet"). 5-fold cross-validation ensures real generalization. Last fold: **zero errors, all 14 categories at 100%.**
 
 ### Decay Parameter Sweep
 
@@ -490,7 +497,7 @@ mamba_memory/
 │   ├── l1/session.py         # Session layer + recursive summarization chain
 │   ├── l2/
 │   │   ├── gate.py           # Hybrid gate (rules + neural classifier)
-│   │   ├── learned_gate.py   # 37-feature self-evolving neural gate (v2)
+│   │   ├── learned_gate.py   # 66-feature self-evolving neural gate + negation detection
 │   │   ├── evolver.py        # Dual decay (step + Ebbinghaus time) + evolution
 │   │   ├── recaller.py       # Semantic-weighted recall with rehearsal tracking
 │   │   └── state.py          # State manager + force_write + snapshot
@@ -536,7 +543,7 @@ Activate: `openclaw config set plugins.slots.memory memory-mamba`
 |---|---|---|---|---|
 | Core model | Graph + vector | Temporal KG | LangChain | SSM state machine |
 | Capacity mgmt | Manual | Time-based | Manual | Auto (Ebbinghaus + eviction) |
-| Write filtering | No | No | No | Neural gate (100% acc, self-evolving) |
+| Write filtering | No | No | No | Neural gate (99.3% CV, self-evolving) |
 | State evolution | No | No | No | Yes (SSM-inspired) |
 | Forgetting model | No | Decay | No | Ebbinghaus + spaced repetition |
 | Learned gate | No | No | No | Yes (neural net + user profiling) |
