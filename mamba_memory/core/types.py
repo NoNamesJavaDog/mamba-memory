@@ -168,7 +168,7 @@ class L2Config(BaseModel):
     slot_count: int = 64
     """Number of memory slots (state dimension)."""
 
-    slot_max_tokens: int = 150
+    slot_max_tokens: int = 300
     """Maximum tokens per slot state text."""
 
     base_decay_rate: float = 0.95
