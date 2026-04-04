@@ -90,6 +90,18 @@ def _cmd_init() -> None:
     print("=" * 40)
     print()
 
+    # Scene preset
+    print("Usage scenario:")
+    print("  1. technical  (DevOps, coding, default)")
+    print("  2. fiction    (novel/story writing)")
+    scene = input("Choose [1]: ").strip() or "1"
+    is_fiction = scene == "2"
+
+    if is_fiction:
+        print("\n  Fiction mode: 128 slots, slow decay, character/plot/world-building signals")
+
+    print()
+
     # Embedding provider
     print("Embedding provider:")
     print("  1. google   (Gemini, recommended)")
@@ -133,18 +145,28 @@ def _cmd_init() -> None:
     compression = comp_map.get(comp_choice, "none")
 
     # Build config
-    from mamba_memory.core.types import L2Config, L3Config
-
-    config = EngineConfig(
-        embedding_provider=embedding,
-        compression_model=compression,
-        l2=L2Config(slot_count=int(slots)),
-        l3=L3Config(db_path=db_path),
-    )
+    if is_fiction:
+        from mamba_memory.presets.fiction import create_fiction_config
+        config = create_fiction_config(
+            db_path=db_path,
+            embedding_provider=embedding,
+            compression_model=compression,
+        )
+    else:
+        from mamba_memory.core.types import L2Config, L3Config
+        config = EngineConfig(
+            embedding_provider=embedding,
+            compression_model=compression,
+            l2=L2Config(slot_count=int(slots)),
+            l3=L3Config(db_path=db_path),
+        )
 
     # Save
     path = save_config(config)
     print(f"\nConfig saved to: {path}")
+    print()
+    mode = "fiction" if is_fiction else "technical"
+    print(f"Mode: {mode}")
     print()
     print("Quick start:")
     print("  mamba-memory serve --mcp       # MCP server")
