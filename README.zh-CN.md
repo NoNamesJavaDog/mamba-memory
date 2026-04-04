@@ -325,6 +325,48 @@ config = EngineConfig(
 
 最优参数：`decay_rate=0.98`，`semantic_weight=0.60`。
 
+## 场景预设
+
+通过预设切换不同使用场景，一行代码切换，不改核心。
+
+### 小说写作模式
+
+支持仙侠/玄幻、言情/都市、科幻及通用小说。
+
+```python
+from mamba_memory.presets.fiction import create_fiction_engine
+
+engine = create_fiction_engine(db_path="~/.mamba-memory/my-novel.db")
+await engine.start()
+
+await engine.ingest("林月是月影门掌门独女，精通寒冰剑法", tags=["林月", "月影门"])
+# "你好" → 0.0 照样过滤
+```
+
+**小说模式 vs 技术模式：**
+
+| | 技术模式（默认） | 小说模式 |
+|---|---|---|
+| 槽位数 | 64 | **128** |
+| 每槽 token | 300 | **500** |
+| 衰减率 | 0.98（100步→13%） | **0.995**（100步→60%） |
+| 半衰期 | 1 小时 | **1 天** |
+| 门控信号 | 端口/IP/决策 | **角色/剧情/关系/世界观** |
+
+**门控评分（7 维）：** 角色(0.25) + 剧情(0.20) + 关系(0.20) + 世界观(0.15) + 命名密度(0.10) + 风格(0.05) + 长度(0.05)
+
+**6 种实体：** character, location, faction, artifact, event, concept
+
+**14 种关系：** loves, hates, master_of, disciple_of, parent_of, sibling_of, ally_of, rival_of, member_of, located_in, possesses, killed, betrayed, successor_of
+
+**关系提取（中英）：**
+```
+"林月爱上了陈风"   → (林月, loves, 陈风)
+"陈风是天剑宗弟子" → (陈风, member_of, 天剑宗)
+```
+
+CLI 也支持：`mamba-memory init` → 选择"小说写作模式"。
+
 ## 项目结构
 
 ```

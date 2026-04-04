@@ -484,6 +484,84 @@ Tested on 417 augmented samples (222 store / 195 discard) across 14 categories i
 
 **Semantic weight must be >= 0.6.**
 
+## Scene Presets
+
+MambaMemory adapts to different usage scenarios via presets. Switch with one line — no core code changes.
+
+### Fiction Writing Mode
+
+For novel/story writing: xianxia, romance, sci-fi, and general fiction.
+
+```python
+from mamba_memory.presets.fiction import create_fiction_engine
+
+engine = create_fiction_engine(db_path="~/.mamba-memory/my-novel.db")
+await engine.start()
+
+# Characters, plot, world-building — all recognized and stored
+await engine.ingest("林月是月影门掌门独女，精通寒冰剑法", tags=["林月", "月影门"])
+await engine.ingest("Captain Nova命令飞船进入曲率航行", tags=["Nova"])
+await engine.ingest("苏晚发现陆远舟就是十年前为她撑伞的少年", tags=["苏晚", "陆远舟"])
+
+# Greetings still filtered: "你好" → 0.0, "ok" → 0.0
+```
+
+**What changes in fiction mode:**
+
+| | Technical (default) | Fiction |
+|---|---|---|
+| Slots | 64 | **128** (more characters/locations) |
+| Tokens/slot | 300 | **500** (character descriptions need space) |
+| Decay rate | 0.98 (100 steps → 13%) | **0.995** (100 steps → 60%) |
+| Time halflife | 1 hour | **1 day** (characters don't fade between chapters) |
+| Eviction threshold | 0.05 | **0.02** (harder to forget) |
+
+**Fiction gate scoring (7 dimensions):**
+
+| Dimension | Weight | Signals |
+|-----------|--------|---------|
+| Character | 0.25 | Names, traits, appearance, abilities, cultivation level |
+| Plot | 0.20 | Events, twists, deaths, betrayals, chapter markers |
+| Relationship | 0.20 | Love, hate, master/disciple, siblings, allies, rivals |
+| World-building | 0.15 | Locations, factions, magic systems, civilizations |
+| Names density | 0.10 | Proper nouns, faction/location names |
+| Style | 0.05 | POV, narrative voice, pacing notes |
+| Length | 0.05 | Longer content more likely substantive |
+
+**Fiction entity types (6):** character, location, faction, artifact, event, concept
+
+**Fiction relation types (14):** loves, hates, master_of, disciple_of, parent_of, sibling_of, ally_of, rival_of, member_of, located_in, possesses, killed, betrayed, successor_of
+
+**Relation extraction (Chinese + English):**
+```
+"林月爱上了陈风"           → (林月, loves, 陈风)
+"陈风是天剑宗弟子"         → (陈风, member_of, 天剑宗)
+"张三杀了李四"             → (张三, killed, 李四)
+"Alice betrayed the Guild" → (Alice, betrayed, Guild)
+```
+
+Also available via CLI: `mamba-memory init` → choose "fiction" mode.
+
+### Custom Presets
+
+Create your own preset for any domain:
+
+```python
+from mamba_memory.core.types import EngineConfig, L2Config, L3Config
+
+# Medical notes preset
+medical_config = EngineConfig(
+    l2=L2Config(slot_count=256, base_decay_rate=0.999),  # never forget diagnoses
+    namespace="medical",
+)
+
+# Business/meetings preset
+business_config = EngineConfig(
+    l2=L2Config(slot_count=64, base_decay_rate=0.98),
+    namespace="business",
+)
+```
+
 ## Project Structure
 
 ```
@@ -510,6 +588,9 @@ mamba_memory/
 │   └── http/
 │       ├── app.py            # FastAPI REST API + Bearer auth
 │       └── dashboard.py      # Embedded Web UI
+├── presets/
+│   ├── __init__.py           # Preset registry
+│   └── fiction.py            # Fiction writing (gate + entities + relations + config)
 ├── sdk/client.py             # Python SDK (direct + HTTP)
 ├── config.py                 # YAML config loading + env overrides
 └── cli.py                    # CLI: init / serve / status / compact / export
